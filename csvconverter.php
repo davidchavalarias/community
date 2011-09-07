@@ -9,16 +9,20 @@ include("../common/library/fonctions_php.php");
 
 /* Creation des tables */
 
-$dbname='community';
-$mytable ="scholars";
-$base= new SQLiteDatabase($dbname, 0666, $err);
-if ($err)  exit($err);
+$dbname='community.db';
+$scholars_db ="scholars";
+
+$base = new PDO("sqlite:".$dbname);    
+echo 'creating tables<br/>';
 
 /* on efface la table et on la recrée*/
-$query = "DROP TABLE $mytable";
-$results = $base->queryexec($query);
+$query = "DROP TABLE $scholars_db";
+$results = $base->query($query);
+$output_file=$fichier."_out.csv";
 
-$output= fopen($fichier."_out.csv", "w","UTF-8");
+echo 'creating '.$output.'<br/>';
+
+$output= fopen($output_file, "w","UTF-8");
 
 global $data,$la;
 
@@ -30,12 +34,13 @@ pt("opening ".$fichier);
 if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     
     /* On crée les entrée de la table avec la première ligne */
-    $query = "CREATE TABLE ".$mytable." (";
+    $query = "CREATE TABLE ".$scholars_db." (";
     $subquery=""; /* partie de la requete pour alimenter la base plus bas */
     $la=array();
     $data = fgetcsv($handle, 1000, ",");
-    print_r($data);
     
+    $count=0;
+    $label_list=array();
     
     $num = count($data);
     pt("number of columns: ".$num);
@@ -45,21 +50,30 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             $label=str_replace(':', '',$label);
             $label=str_replace("'", '',$label);
             $label=str_replace("?", '',$label);
-                        
-            $query =$query.$label.' text,';
+            $label=str_replace("-", '_',$label);
+            $label=str_replace(",", '_',$label);
+            $label=str_replace("(", '',$label);
+            $label=str_replace(")", '',$label);
+            
+            
             $subquery=$subquery.$label.',';
             $la[$label]=$c;
+            if ($label_list[$label]==1){ // si le label existe déjà on lui colle un post_fix pour éviter les doublon de fields
+                $label.='_2';
+            }
+            $label_list[$label]=1;
+            $query =$query.$label.' text,';
+            
             pt($label);
-        }
-        
-        
-    /*    
+            
+        }                
+    $query =substr($query, 0, -1);       
     $query = $query . ')';
+    
     $subquery = substr($subquery, 0, -1);
-    pt("sous requelte" . $subquery);
+    pt("sous requete: " . $subquery);
     pt("Creating table with : " . $query);
-    $results = $base->queryexec($query);
-    */
+    $results = $base->query($query);   
 
     $heading[]='corp_id';
     $heading[]='doc_id';
@@ -75,7 +89,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
         $profile=array();
         $corp_id=str_replace(' ','_',$data[$la['Country']]);
         $doc_id=$data[$la['itemId']];
-        $title=$data[$la['First_Name']].' '.$data[$la['Last_Name']];
+        $title=trim($data[$la['First_Name']].' '.$data[$la['Last_Name']]);
         $doc_acrnm=$title;
         
         
@@ -99,27 +113,31 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             pt($title);            
         }
             
-        /*
-        for ($c = 0; $c < $num; $c++) {
-        $query = "INSERT INTO " . $mytable . "(";
-            $number = 1;
-            $title = "Mon dernier billet";
-            $content = "Le texte de mon article...";
-            $date = strftime("%b %d %Y %H:%M", time());
-            $author = 1;
-            $url = "http://www.scriptol.fr/sql/tutoriel-sqlite.php";
-
-            $query = "INSERT INTO $mytable(ID, post_title, post_content, post_author, post_date, guid) 
-                VALUES ('$number', '$title', '$content', '$author', '$date', '$url')";
-            $results = $base->queryexec($query);
-            pt($data[$c]);
+        $values="'".$data[0]."'";
+        for ($c = 1; $c < $num; $c++) {
+            $values=$values.",'".$data[$c]."'";            
             }    
-         */
         
+        $query = "INSERT INTO " . $scholars_db . "(".$subquery.") VALUES (".$values.")";
+        /*$query = "INSERT INTO $scholars_db(ID, post_title, post_content, post_author, post_date, guid) 
+                VALUES ('$number', '$title', '$content', '$author', '$date', '$url')";*/
+        pt($query);
+        $results = $base->query($query);                       
+        if ($results ) {
+            pt('requete OK');
+        }
     }
+    
     fclose($handle);
 }
 
+$query = "SELECT nom,prenom FROM ".$scholars_db;
+$results = sqlite_array_query($base,$query, SQLITE_ASSOC);
+pt($results[0]);
+
+
+copy($output_file,'community.csv');
+pt($output_file.' copied');
 pt($row.' scholars processed');
 
 function merge($fieldlist, $sep=', ') {
