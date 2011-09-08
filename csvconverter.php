@@ -93,7 +93,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
         $doc_acrnm=$title;
         
         
-        $abstract=$data[$la['Country']].'<br/>'.
+        $abstract=$data[$la['Country']].'.'.
         section('Affiliation','Lab,Institutional_affiliations_of_your_lab').
         section('Second Affiliation','Second_lab,Second_institutional_affiliation').
         section('Keywords','Keywords');
@@ -167,7 +167,7 @@ function section($name,$content,$sep=', '){
     $string='';        
     $temp=merge($content,$sep);
     if ($temp!=null){
-            $string='<b>'.$name.': </b>'.$temp.'<br/>';
+            $string=''.$name.': '.$temp.'';
         }    
     return $string;   
 }
