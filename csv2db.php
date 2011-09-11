@@ -9,12 +9,36 @@ include("../common/library/fonctions_php.php");
 
 /* Creation des tables */
 
+
 $base = new PDO("sqlite:".$dbname);    
 echo 'creating tables<br/>';
 
-/* on efface la table et on la recrée*/
-$query = "DROP TABLE $scholars_db";
+if ($drop_tables){
+/* on efface les tables et on la recrée*/
+
+$query = "DROP TABLE terms;";
 $results = $base->query($query);
+
+$query = "DROP TABLE scholars;";
+$results = $base->query($query);
+
+$query = "DROP TABLE scholars2terms;";
+$results = $base->query($query);
+
+$query = "DROP TABLE ". $scholars_db.";";
+$results = $base->query($query);
+
+
+$query = "CREATE TABLE terms (id integer,stemmed_key text,term text,variations text,occurrences integer)";
+$results = $base->query($query);
+
+$query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
+$results = $base->query($query);
+
+
+$query = "CREATE TABLE scholars (id integer,unique_id text,country text,title text,first_name text,initials text,last_name text,position text,keywords text,keywords_ids text,homepage text)";
+$results = $base->query($query);
+}
 $output_file=$fichier."_out.csv";
 
 echo 'creating '.$output.'<br/>';
@@ -33,12 +57,14 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     /* On crée les entrée de la table avec la première ligne */
     $query = "CREATE TABLE ".$scholars_db." (";
     $subquery=""; /* partie de la requete pour alimenter la base plus bas */
-    $la=array();
+    $la=array(); // liste des noms de colonne du csv
     $data = fgetcsv($handle, 1000, ",");
     
     $count=0;
     $label_list=array();
+    $terms_array=array();// tableau pour remplir la table terms
     
+    // on prépare les colonnes pour la table de données brutes
     $num = count($data);
     pt("number of columns: ".$num);
         for ($c=0; $c < $num; $c++) {
@@ -80,7 +106,59 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     $heading[]='keywords';
     fputcsv($output,$heading,$file_sep,'"');
     
+    // on analyse le csv
+    $ngram_id=array();
+    $scholar_count=0;
     while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
+        // analyse des mots clefs
+            $scholar_count+=1;
+            $scholar=str_replace(' ','_',$data[$la['First_Name']].' '.$data[$la['Second_fist_name_initials']].' '.$data[$la['Last_Name']]);                        
+            $scholar_ngrams='';
+            $scholar_ngrams_ids='';
+            
+            $keywords=$data[$la['Keywords']];
+            $keywords=str_replace(".",'',$keywords);
+            $keywords=str_replace("-",' ',$keywords);
+            $ngrams=split('(,|;)',$keywords);
+            
+            foreach ($ngrams as $ngram) {
+            $ngram=trim($ngram);    
+            if ((strlen($ngram) < 50)&&(strlen($ngram) > 0)) {
+                $gram_array = split(' ', $ngram);
+                $ngram_stemmed = '';
+                if (count($gram_array)==2){
+                    natsort($gram_array);
+                }
+                foreach ($gram_array as $gram) {
+                    $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8').' ';
+                }
+                $ngram_stemmed=trim($ngram_stemmed);
+                if (array_key_exists($ngram_stemmed, $terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
+                    if (array_key_exists($ngram, $terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
+                        $terms_array[$ngram_stemmed][$ngram]+=1;
+                    } else {
+                        $terms_array[$ngram_stemmed][$ngram] = 1;
+                    }
+                } else {
+                    $terms_array[$ngram_stemmed][$ngram] = 1;
+                    $ngram_id[$ngram_stemmed]=count($ngram_id)+1;
+                }
+                $scholar_ngrams.=$ngram.',';
+                $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed].',';   
+        
+                $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('".$scholar."',".$ngram_id[$ngram_stemmed].")";
+                $results = $base->query($query);                           
+            }
+        }         
+        $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,homepage) VALUES (".$scholar_count.",'".$scholar."','".$data[$la['Country']]."','".$data[$la['Title']]."','".$data[$la['First_Name']]."','".$data[$la['Second_fist_name_initials']]."','".$data[$la['Last_Name']]."','".$data[$la['Position']]."','".$scholar_ngrams."','".substr($scholar_ngrams_ids,0,-1)."','".$data[$la['Homepage']]."')";
+        pt($query);
+        $results = $base->query($query);
+        
+        
+
+        //
+        
+        
         $num = count($data);        
         $row++;
         $profile=array();
@@ -88,8 +166,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
         $doc_id=$data[$la['itemId']];
         $title=trim($data[$la['First_Name']].' '.$data[$la['Last_Name']]);
         $doc_acrnm=$title;
-        
-        
+                
         $abstract=$data[$la['Country']].'.'.
         section('Affiliation','Lab,Institutional_affiliations_of_your_lab').
         section('Second Affiliation','Second_lab,Second_institutional_affiliation').
@@ -126,6 +203,29 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     }
     
     fclose($handle);
+}
+
+print_r($terms_array);
+$id=0;
+pt('inserting terms '.count($terms_array));
+$stemmed_ngram_list=array_keys($terms_array);
+for ($i=0;$i<count($stemmed_ngram_list);$i++){
+//foreach ($terms_array as $stemmed_ngram -> $ngram_forms){
+    $stemmed_ngram=$stemmed_ngram_list[$i];
+    $ngram_forms=$terms_array[$stemmed_ngram];
+    pt($id);
+    $most_common_form=array_search(max($ngram_forms), $ngram_forms);
+    pt($most_common_form);
+    $variantes=array_keys($ngram_forms);
+    $variations=implode ( '***' ,$variantes );
+    //$query = "INSERT INTO terms (id,stemmed_key,term,variations,occurrences) VALUES ('".$id."','".$stemmed_ngram."','".$most_common_form."','".$variations."','".sum($ngram_forms).")";        
+    
+    $query = "INSERT INTO terms (id,stemmed_key,term,variations,occurrences) VALUES ('".$ngram_id[$stemmed_ngram]."','".$stemmed_ngram."','".$most_common_form."','".$variations."',".array_sum($ngram_forms).")";        
+    
+    pt($query);
+    $results = $base->query($query);        
+    
+    
 }
 
 $query = "SELECT nom,prenom FROM ".$scholars_db;
