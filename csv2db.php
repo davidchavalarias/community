@@ -36,7 +36,7 @@ $query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
 $results = $base->query($query);
 
 
-$query = "CREATE TABLE scholars (id integer,unique_id text,country text,title text,first_name text,initials text,last_name text,position text,keywords text,keywords_ids text,homepage text)";
+$query = "CREATE TABLE scholars (id integer,unique_id text,country text,title text,first_name text,initials text,last_name text,position text,keywords text,keywords_ids text,nb_keywords integer,homepage text)";
 $results = $base->query($query);
 }
 $output_file=$fichier."_out.csv";
@@ -115,6 +115,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             $scholar=str_replace(' ','_',$data[$la['First_Name']].' '.$data[$la['Second_fist_name_initials']].' '.$data[$la['Last_Name']]);                        
             $scholar_ngrams='';
             $scholar_ngrams_ids='';
+            $scholar_ngrams_count=0;
             
             $keywords=$data[$la['Keywords']];
             $keywords=str_replace(".",'',$keywords);
@@ -145,12 +146,12 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
                 }
                 $scholar_ngrams.=$ngram.',';
                 $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed].',';   
-        
+                $scholar_ngrams_count+=1;
                 $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('".$scholar."',".$ngram_id[$ngram_stemmed].")";                
                 $results = $base->query($query);                           
             }
         }         
-        $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,homepage) VALUES (".$scholar_count.",'".$scholar."','".$data[$la['Country']]."','".$data[$la['Title']]."','".$data[$la['First_Name']]."','".$data[$la['Second_fist_name_initials']]."','".$data[$la['Last_Name']]."','".$data[$la['Position']]."','".$scholar_ngrams."','".substr($scholar_ngrams_ids,0,-1)."','".$data[$la['Homepage']]."')";
+        $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,nb_keywords, homepage) VALUES (".$scholar_count.",'".$scholar."','".$data[$la['Country']]."','".$data[$la['Title']]."','".$data[$la['First_Name']]."','".$data[$la['Second_fist_name_initials']]."','".$data[$la['Last_Name']]."','".$data[$la['Position']]."','".$scholar_ngrams."','".substr($scholar_ngrams_ids,0,-1)."','".$scholar_ngrams_count."','".$data[$la['Homepage']]."')";
         pt($query);
         $results = $base->query($query);
         
