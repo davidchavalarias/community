@@ -146,7 +146,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
                 $scholar_ngrams.=$ngram.',';
                 $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed].',';   
         
-                $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('".$scholar."',".$ngram_id[$ngram_stemmed].")";
+                $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('".$scholar."',".$ngram_id[$ngram_stemmed].")";                
                 $results = $base->query($query);                           
             }
         }         
@@ -228,9 +228,6 @@ for ($i=0;$i<count($stemmed_ngram_list);$i++){
     
 }
 
-$query = "SELECT nom,prenom FROM ".$scholars_db;
-$results = sqlite_array_query($base,$query, SQLITE_ASSOC);
-pt($results[0]);
 
 
 copy($output_file,'community.csv');
