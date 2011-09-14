@@ -32,7 +32,7 @@ $gexf.="</attributes>" . "\n";
 $gexf.="<nodes>" . "\n";
 
 // liste des chercheurs
-$sql = "SELECT * FROM scholars".$scholar_filter;
+$sql = "SELECT * FROM scholars ".$scholar_filter;
 $scholars = array();
 //$query = "SELECT * FROM scholars";
 foreach ($base->query($sql) as $row) {
@@ -162,7 +162,7 @@ foreach ($terms_array as $term) {
 
 
 foreach ($scholars as $scholar) {
-        if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>1){
+        if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>=$min_num_friends){
         $nodeId = 'D::' . $scholar['unique_id'];
         $nodeLabel = $scholar['title']. ' ' . $scholar['first_name'] . ' ' . $scholar['initials'] . ' ' . $scholar['last_name'];
         $nodePositionY = rand(0, 100) / 100;
@@ -171,7 +171,7 @@ foreach ($scholars as $scholar) {
         $content.='<b>Country: </b>'.$scholar['country'].'</br>';
         
         if ($scholar['position']!=null){        
-        //    $content.='<b>Position: </b>'.str_replace('&', ' and ',$scholar['position']).'</br>';
+            $content.='<b>Position: </b>'.str_replace('&', ' and ',$scholar['position']).'</br>';
         }
         $affiliation='';
         if ($scholar['lab']!=null){
@@ -181,22 +181,31 @@ foreach ($scholars as $scholar) {
             $affiliation.=$scholar['affiliation'];
         }
         if(($scholar['affiliation']!=null)|($scholar['lab']!=null)){
-        //$content.='<b>Affiliation: </b>'.str_replace('&', ' and ',$affiliation).'</br>';            
+        $content.='<b>Affiliation: </b>'.str_replace('&', ' and ',$affiliation).'</br>';            
         }
         
         if ((substr($scholar['homepage'],0,3)==='www')|(substr($scholar['homepage'],0,4)==='http')){            
         $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
         }
+        if ($scholar['css_voter']==='Yes'){
+            $color='b="255" g="0"  r="0"';            
+        }elseif ($scholar['css_member']==='Yes'){
+            $color='b="0" g="255"  r="0"';
+        }else{
+            $color='b="40" g="40"  r="40"';
+        }
+        pt($scholar['last_name'].','.$scholar['css_voter'].','.$scholar['css_member']);
+        pt($color);        
         pt($content);
         if(is_utf8($nodeLabel)){
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";
-        $gexf.='<viz:color b="255" g="0"  r="0"/>' . "\n";
+        $gexf.='<viz:color '.$color.'/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="Document"/>' . "\n";
         $gexf.='<attvalue for="1" value="10"/>' . "\n";
         $gexf.='<attvalue for="4" value="10"/>' . "\n";
         if(is_utf8($content)){
-            $gexf.='<attvalue for="2" value="'.htmlentities($content).'"/>' . "\n";
+            $gexf.='<attvalue for="2" value="'.htmlspecialchars($content).'"/>' . "\n";
         }
         $gexf.='</attvalues></node>' . "\n";
         }        
@@ -264,4 +273,8 @@ $gexfFile = fopen('../tinasoft.desktop/static/tinaweb/output.gexf', 'w');
 fputs($gexfFile, $gexf);
 
 fclose($gexfFile);
+
+pt(count($scholarsMatrix).' scholars');
+pt(count($termsMatrix).' terms');
+
 ?>
