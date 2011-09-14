@@ -184,19 +184,24 @@ foreach ($scholars as $scholar) {
         //$content.='<b>Affiliation: </b>'.str_replace('&', ' and ',$affiliation).'</br>';            
         }
         
-        if (strlen($scholar['homepage'])>2){
+        if ((substr($scholar['homepage'],0,3)==='www')|(substr($scholar['homepage'],0,4)==='http')){            
         $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
         }
         pt($content);
+        if(is_utf8($nodeLabel)){
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";
         $gexf.='<viz:color b="255" g="0"  r="0"/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="Document"/>' . "\n";
         $gexf.='<attvalue for="1" value="10"/>' . "\n";
         $gexf.='<attvalue for="4" value="10"/>' . "\n";
-        $gexf.='<attvalue for="2" value="'.htmlentities($content).'"/>' . "\n";
-        $gexf.='</attvalues></node>' . "\n";
+        if(is_utf8($content)){
+            $gexf.='<attvalue for="2" value="'.htmlentities($content).'"/>' . "\n";
         }
+        $gexf.='</attvalues></node>' . "\n";
+        }        
+        }
+        
 }
 
 
