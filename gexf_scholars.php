@@ -32,8 +32,7 @@ $gexf.="</attributes>" . "\n";
 $gexf.="<nodes>" . "\n";
 
 // liste des chercheurs
-$sql = "SELECT unique_id,first_name,last_name,initials,nb_keywords,keywords_ids FROM scholars";
-pt($query);
+$sql = "SELECT * FROM scholars".$scholar_filter;
 $scholars = array();
 //$query = "SELECT * FROM scholars";
 foreach ($base->query($sql) as $row) {
@@ -43,7 +42,20 @@ foreach ($base->query($sql) as $row) {
     $info['initials'] = $row['initials'];
     $info['last_name'] = $row['last_name'];
     $info['nb_keywords'] = $row['nb_keywords'];
+    $info['css_voter'] = $row['css_voter'];
+    $info['css_member'] = $row['css_member'];
     $info['keywords_ids'] = explode(',',$row['keywords_ids']);    
+    $info['status'] =  $row['status']; 
+    $info['country'] =  $row['country']; 
+    $info['homepage'] =  $row['homepage']; 
+    $info['lab'] =  $row['lab']; 
+    $info['affiliation'] =  $row['affiliation']; 
+    $info['lab2'] =  $row['lab2']; 
+    $info['affiliation2'] =  $row['affiliation2']; 
+    $info['homepage'] =  $row['homepage']; 
+    $info['title'] =  $row['title']; 
+    $info['position'] =  $row['position']; 
+    
     $scholars[$row['unique_id']] = $info;
 }
 
@@ -86,18 +98,18 @@ pt($query);
 $term_array = array();
 //$query = "SELECT * FROM scholars";
 foreach ($base->query($sql) as $row) {
+    if ($termsMatrix[$row['id']]!= null){ // on prend que les termes sont mentionnés par les chercheurs filtrés
     $info = array();
     $info['id'] = $row['id'];
     $info['occurrences'] = $row['occurrences'];
     $info['term'] = $row['term'];
     $terms_array[$row['id']] = $info;
 }
+}
 
-pta($term_array);
 $count = 1;
 
 foreach ($terms_array as $term) {
-    if ($count < 1000) {
         $count+=1;
         // on en profite pour charger le profil scholar du term
         $query = "SELECT scholar FROM scholars2terms where term_id='" . $term['id'] . "'";
@@ -111,15 +123,18 @@ foreach ($terms_array as $term) {
             if ($scholarsMatrix[$term_scholars[$k]] != null) {
                 $scholarsMatrix[$term_scholars[$k]][occ] = $scholarsMatrix[$term_scholars[$k]][occ] + 1;
                 for ($l = 0; $l < count($term_scholars); $l++) {
+                if (array_key_exists($term_scholars[$l], $scholars)) {
                     if ($scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] != null) {
                         $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
                     } else {
                         $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] = 1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
                     }
                 }
+            }
             } else {
                 $scholarsMatrix[$term_scholars[$k]][occ] = 1;
                 for ($l = 0; $l < count($term_scholars); $l++) {
+                if (array_key_exists($term_scholars[$l], $scholars)) {
                     if ($scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] != null) {
                         $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
                         ;
@@ -130,6 +145,7 @@ foreach ($terms_array as $term) {
                 }
             }
         }
+    }
         $nodeId = 'N::' . $term['id'];
         $nodeLabel = str_replace('&',' and ',$terms_array[$term['id']]['term']);
         $nodePositionY = rand(0, 100) / 100;
@@ -137,24 +153,47 @@ foreach ($terms_array as $term) {
         $gexf.='<viz:color b="0" g="255"  r="0"/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="NGram"/>' . "\n";
-        $gexf.='<attvalue for="1" value="10"/>' . "\n";
-        $gexf.='<attvalue for="4" value="10"/>' . "\n";
+        $gexf.='<attvalue for="1" value="'.$terms_array[$term['id']]['occurrences'].'"/>' . "\n";
+        $gexf.='<attvalue for="4" value="'.$terms_array[$term['id']]['occurrences'].'"/>' . "\n";
         $gexf.='</attvalues></node>' . "\n";
         
-    }
+    
 }
 
 foreach ($scholars as $scholar) {
         if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>1){
         $nodeId = 'D::' . $scholar['unique_id'];
-        $nodeLabel = $scholar['first_name'] . ' ' . $scholar['initials'] . ' ' . $scholar['last_name'];
+        $nodeLabel = $scholar['title']. ' ' . $scholar['first_name'] . ' ' . $scholar['initials'] . ' ' . $scholar['last_name'];
         $nodePositionY = rand(0, 100) / 100;
+        $content='';
+        
+        $content.='<b>Country: </b>'.$scholar['country'].'</br>';
+        
+        if ($scholar['position']!=null){        
+            $content.='<b>Position: </b>'.str_replace('&', ' and ',$scholar['position']).'</br>';
+        }
+        $affiliation='';
+        if ($scholar['lab']!=null){
+            $affiliation.=$scholar['lab'].',';
+        }
+        if ($scholar['affiliation']!=null){
+            $affiliation.=$scholar['affiliation'];
+        }
+        if(($scholar['affiliation']!=null)|($scholar['lab']!=null)){
+        //$content.='<b>Affiliation: </b>'.str_replace('&', ' and ',$affiliation).'</br>';            
+        }
+        
+        if (strlen($scholar['homepage'])>2){
+            $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
+        }
+        pt($content);
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";
         $gexf.='<viz:color b="255" g="0"  r="0"/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="Document"/>' . "\n";
         $gexf.='<attvalue for="1" value="10"/>' . "\n";
         $gexf.='<attvalue for="4" value="10"/>' . "\n";
+        $gexf.='<attvalue for="2" value="'.htmlentities($content).'"/>' . "\n";
         $gexf.='</attvalues></node>' . "\n";
         }
 }
@@ -166,6 +205,7 @@ $edgeid = 0;
 
 // ecriture des liens bipartite
 foreach ($scholars as $scholar) {
+    if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>1){        
     foreach ($scholar['keywords_ids'] as $keywords)     
     if ($keywords!=null){    
     $edgeid+=1;
@@ -174,12 +214,47 @@ foreach ($scholars as $scholar) {
     $gexf.='<attvalues> <attvalue for="5" value="1"' .
             '/><attvalue for="6" value="bipartite"/></attvalues>' . "\n" . '</edge>' . "\n";
 }
+}}
+
+
+// ecriture des liens semantiques
+//print_r($terms);
+foreach ($terms_array as $term){
+    $nodeId1=$term['id'];
+    $neighbors=$termsMatrix[$nodeId1][cooc];       
+    foreach ($neighbors as $neigh_id => $occ) {        
+        if ($neigh_id!=$nodeId1) {
+            $edgeid+=1;
+            $gexf.='<edge id="'.$edgeid.'"'.' source="N::'.$nodeId1.'" '.
+                    ' target="N::'.$neigh_id.'" weight="'.($occ/$term['occurrences']).'">'."\n";
+            $gexf.='<attvalues> <attvalue for="5" value="'.($occ/$term['occurrences']).'"'.
+                    '/><attvalue for="6" value="nodes2"/></attvalues>'."\n".'</edge>'."\n";
+            
+        }
+    }
+}
+
+// ecriture des liens entre scholars
+//print_r($terms);
+foreach ($scholars as $scholar){
+    $nodeId1=$scholar['unique_id'];
+    $neighbors=$scholarsMatrix[$nodeId1][cooc];   
+    foreach ($neighbors as $neigh_id => $occ) {        
+        if ($neigh_id!=$nodeId1) {
+            $edgeid+=1;
+            $gexf.='<edge id="'.$edgeid.'"'.' source="D::'.$nodeId1.'" '.
+                    ' target="D::'.$neigh_id.'" weight="'.$occ.'">'."\n";
+            $gexf.='<attvalues> <attvalue for="5" value="'.$occ.'"'.
+                    '/><attvalue for="6" value="nodes2"/></attvalues>'."\n".'</edge>'."\n";
+
+        }
+    }
 }
 
 
 $gexf.='</edges></graph></gexf>';
 
-$gexfFile = fopen('output.gexf', 'w');
+$gexfFile = fopen('../tinasoft.desktop/static/tinaweb/output.gexf', 'w');
 fputs($gexfFile, $gexf);
 
 fclose($gexfFile);

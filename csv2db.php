@@ -36,7 +36,10 @@ $query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
 $results = $base->query($query);
 
 
-$query = "CREATE TABLE scholars (id integer,unique_id text,country text,title text,first_name text,initials text,last_name text,position text,keywords text,keywords_ids text,nb_keywords integer,homepage text)";
+$query = "CREATE TABLE scholars (id integer,unique_id text,country text,
+    title text,first_name text,initials text,last_name text,position text,
+    keywords text,keywords_ids text,nb_keywords integer,homepage text,
+    css_member text,css_voter text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text)";
 $results = $base->query($query);
 }
 $output_file=$fichier."_out.csv";
@@ -123,7 +126,8 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             $ngrams=split('(,|;)',$keywords);
             
             foreach ($ngrams as $ngram) {
-            $ngram=trim($ngram);    
+            //$ngram=str_replace("'", " ",trim($ngram));    
+            $ngram=trim($ngram);
             if ((strlen($ngram) < 50)&&(strlen($ngram) > 0)) {
                 $gram_array = split(' ', $ngram);
                 $ngram_stemmed = '';
@@ -151,11 +155,27 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
                 $results = $base->query($query);                           
             }
         }         
-        $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,nb_keywords, homepage) VALUES (".$scholar_count.",'".$scholar."','".$data[$la['Country']]."','".$data[$la['Title']]."','".$data[$la['First_Name']]."','".$data[$la['Second_fist_name_initials']]."','".$data[$la['Last_Name']]."','".$data[$la['Position']]."','".$scholar_ngrams."','".substr($scholar_ngrams_ids,0,-1)."','".$scholar_ngrams_count."','".$data[$la['Homepage']]."')";
+        
+        
+        
+        
+        if(($data[$la['First_Name']]!=null)&&($data[$la['Last_Name']]!=null)){
+        
+        $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
+            nb_keywords, homepage,css_member,css_voter,lab,affiliation,lab2,affiliation2,want_whoswho) VALUES (".$scholar_count.",'".
+            $scholar."','".$data[$la['Country']]."','".$data[$la['Title']].
+        "','".$data[$la['First_Name']]."','".$data[$la['Second_fist_name_initials']]."','".$data[$la['Last_Name']]."','".
+        $data[$la['Position']]."','".$scholar_ngrams."','".substr($scholar_ngrams_ids,0,-1)."','".$scholar_ngrams_count.
+                "','".$data[$la['Homepage']]."','".$data[$la['CSS_Member_AUTO']]."','".$data[$la['CSS_Voters_AUTO']]
+                ."','".$data[$la['Lab']]."','".$data[$la['Institutional_affiliation']]
+                ."','".$data[$la['Second_lab']]."','".$data[$la['Second_Institutional_affiliation']]
+                ."','".$data[$la['Do_you_want_to_appear_in_the_CSS_Whos_who_']]."')";
         pt($query);
+        
+        
         $results = $base->query($query);
         
-        
+        }
 
         //
         
@@ -217,6 +237,7 @@ for ($i=0;$i<count($stemmed_ngram_list);$i++){
     pt($id);
     $most_common_form=array_search(max($ngram_forms), $ngram_forms);
     pt($most_common_form);
+    $most_common_form=str_replace('"','',$most_common_form);
     $variantes=array_keys($ngram_forms);
     $variations=implode ( '***' ,$variantes );
     //$query = "INSERT INTO terms (id,stemmed_key,term,variations,occurrences) VALUES ('".$id."','".$stemmed_ngram."','".$most_common_form."','".$variations."','".sum($ngram_forms).")";        
