@@ -12,7 +12,7 @@ $fichier = "Scholars13Sept2011.csv";
 $drop_tables=true; // on efface les tables
 $language='english';
 $file_sep=',';
+$scholar_filter=" where country='France' AND status='o'";
 $scholar_filter=" where css_member='Yes'";
-//$scholar_filter=" where country='France'";
 
 ?>

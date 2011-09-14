@@ -160,6 +160,7 @@ foreach ($terms_array as $term) {
     
 }
 
+
 foreach ($scholars as $scholar) {
         if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>1){
         $nodeId = 'D::' . $scholar['unique_id'];
@@ -170,7 +171,7 @@ foreach ($scholars as $scholar) {
         $content.='<b>Country: </b>'.$scholar['country'].'</br>';
         
         if ($scholar['position']!=null){        
-            $content.='<b>Position: </b>'.str_replace('&', ' and ',$scholar['position']).'</br>';
+        //    $content.='<b>Position: </b>'.str_replace('&', ' and ',$scholar['position']).'</br>';
         }
         $affiliation='';
         if ($scholar['lab']!=null){
@@ -184,7 +185,7 @@ foreach ($scholars as $scholar) {
         }
         
         if (strlen($scholar['homepage'])>2){
-            $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
+        $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
         }
         pt($content);
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";

@@ -126,8 +126,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             $ngrams=split('(,|;)',$keywords);
             
             foreach ($ngrams as $ngram) {
-            //$ngram=str_replace("'", " ",trim($ngram));    
-            $ngram=trim($ngram);
+            $ngram=str_replace("'", " ",trim($ngram));    
             if ((strlen($ngram) < 50)&&(strlen($ngram) > 0)) {
                 $gram_array = split(' ', $ngram);
                 $ngram_stemmed = '';
@@ -156,7 +155,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             }
         }         
         
-        
+        $scholar_ngrams=str_replace("'", " ", $scholar_ngrams); //
         
         
         if(($data[$la['First_Name']]!=null)&&($data[$la['Last_Name']]!=null)){
