@@ -12,6 +12,7 @@ $base = new PDO("sqlite:" . $dbname);
 
 $termsMatrix = array(); // liste des termes présents chez les scholars avec leurs cooc avec les autres termes
 $scholarsMatrix = array(); // liste des scholars avec leurs cooc avec les autres termes
+$scholarsIncluded=0;
 // Ecriture de l'entête du gexf
 
 $gexf.='<gexf xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gephi.org/gexf/viz" version="1.1"> ';
@@ -45,6 +46,7 @@ foreach ($base->query($sql) as $row) {
     $info['css_voter'] = $row['css_voter'];
     $info['css_member'] = $row['css_member'];
     $info['keywords_ids'] = explode(',',$row['keywords_ids']);    
+    $info['keywords'] = $row['keywords'];
     $info['status'] =  $row['status']; 
     $info['country'] =  $row['country']; 
     $info['homepage'] =  $row['homepage']; 
@@ -94,7 +96,7 @@ foreach ($scholars as $scholar) {
 
 // liste des termes
 $sql = "SELECT term,id,occurrences FROM terms";
-pt($query);
+//pt($query);
 $term_array = array();
 //$query = "SELECT * FROM scholars";
 foreach ($base->query($sql) as $row) {
@@ -125,9 +127,9 @@ foreach ($terms_array as $term) {
                 for ($l = 0; $l < count($term_scholars); $l++) {
                 if (array_key_exists($term_scholars[$l], $scholars)) {
                     if ($scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] != null) {
-                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
+                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords'])/$scholars[$term_scholars[$k]]['nb_keywords']);
                     } else {
-                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] = 1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
+                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] = 1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords'])/$scholars[$term_scholars[$k]]['nb_keywords']);
                     }
                 }
             }
@@ -136,10 +138,10 @@ foreach ($terms_array as $term) {
                 for ($l = 0; $l < count($term_scholars); $l++) {
                 if (array_key_exists($term_scholars[$l], $scholars)) {
                     if ($scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] != null) {
-                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
+                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]]+=1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords'])/$scholars[$term_scholars[$k]]['nb_keywords']);
                         ;
                     } else {
-                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] = 1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords']));
+                        $scholarsMatrix[$term_scholars[$k]][cooc][$term_scholars[$l]] = 1 / (log($term['occurrences']) * log($scholars[$term_scholars[$k]]['nb_keywords'])/$scholars[$term_scholars[$k]]['nb_keywords']);
                         ;
                     }
                 }
@@ -150,7 +152,7 @@ foreach ($terms_array as $term) {
         $nodeLabel = str_replace('&',' and ',$terms_array[$term['id']]['term']);
         $nodePositionY = rand(0, 100) / 100;
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";
-        $gexf.='<viz:color b="0" g="255"  r="0"/>' . "\n";
+        $gexf.='<viz:color b="0" g="0"  r="200"/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="NGram"/>' . "\n";
         $gexf.='<attvalue for="1" value="'.$terms_array[$term['id']]['occurrences'].'"/>' . "\n";
@@ -162,7 +164,9 @@ foreach ($terms_array as $term) {
 
 
 foreach ($scholars as $scholar) {
+        //pt($scholar['unique_id']. '-'.count($scholarsMatrix[$scholar['unique_id']]['cooc']));
         if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>=$min_num_friends){
+            $scholarsIncluded+=1;
         $nodeId = 'D::' . $scholar['unique_id'];
         $nodeLabel = $scholar['title']. ' ' . $scholar['first_name'] . ' ' . $scholar['initials'] . ' ' . $scholar['last_name'];
         $nodePositionY = rand(0, 100) / 100;
@@ -184,26 +188,42 @@ foreach ($scholars as $scholar) {
         $content.='<b>Affiliation: </b>'.str_replace('&', ' and ',$affiliation).'</br>';            
         }
         
-        if ((substr($scholar['homepage'],0,3)==='www')|(substr($scholar['homepage'],0,4)==='http')){            
-        $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]';
+        
+        if (strlen($scholar['keywords'])>3){
+        $content.='<b>Keywords: </b>'.str_replace(',', ', ',substr($scholar['keywords'],0,-1)).'.</br>';      
         }
+        
+        if (substr($scholar['homepage'],0,3)==='www'){
+        $content.='[ <a href='.str_replace('&', ' and ','http://'.$scholar['homepage']).' target=blank > View homepage </a ><br/>]';                                    
+                        }
+        elseif(substr($scholar['homepage'],0,4)==='http'){
+        $content.='[ <a href='.str_replace('&', ' and ',$scholar['homepage']).' target=blank > View homepage </a >]<br/>';
+        }
+        
         if ($scholar['css_voter']==='Yes'){
-            $color='b="255" g="0"  r="0"';            
+            $color='b="19" g="204"  r="244"';            
         }elseif ($scholar['css_member']==='Yes'){
-            $color='b="0" g="255"  r="0"';
+            $color='b="243" g="183"  r="19"';
         }else{
-            $color='b="40" g="40"  r="40"';
+            $color='b="255" g="0"  r="0"';
         }
-        pt($scholar['last_name'].','.$scholar['css_voter'].','.$scholar['css_member']);
-        pt($color);        
-        pt($content);
+        //pt($scholar['last_name'].','.$scholar['css_voter'].','.$scholar['css_member']);
+        //pt($color);        
+        //pt($content);
         if(is_utf8($nodeLabel)){
         $gexf.='<node id="' . $nodeId . '" label="' . $nodeLabel . '">' . "\n";
         $gexf.='<viz:color '.$color.'/>' . "\n";
         $gexf.='<viz:position x="' . (rand(0, 100) / 100) . '"    y="' . $nodePositionY . '"  z="0" />' . "\n";
         $gexf.='<attvalues> <attvalue for="0" value="Document"/>' . "\n";
+        if (true){
+        $gexf.='<attvalue for="1" value="12"/>' . "\n";
+        $gexf.='<attvalue for="4" value="12"/>' . "\n";
+            
+        }else{
         $gexf.='<attvalue for="1" value="10"/>' . "\n";
         $gexf.='<attvalue for="4" value="10"/>' . "\n";
+            
+        }
         if(is_utf8($content)){
             $gexf.='<attvalue for="2" value="'.htmlspecialchars($content).'"/>' . "\n";
         }
@@ -269,12 +289,13 @@ foreach ($scholars as $scholar){
 
 $gexf.='</edges></graph></gexf>';
 
-$gexfFile = fopen('../tinasoft.desktop/static/tinaweb/output.gexf', 'w');
+$gexfFile = fopen('../communityexplorer/default.gexf', 'w');
 fputs($gexfFile, $gexf);
 
 fclose($gexfFile);
 
 pt(count($scholarsMatrix).' scholars');
+pt($scholarsIncluded.' scholars included');
 pt(count($termsMatrix).' terms');
 
 ?>
