@@ -1,7 +1,7 @@
 <?php
 
 function normalize_position($value) {
-   $value = strtolower($value);
+   $value = trim(strtolower($value));
 
    // global normalization
    $value=str_replace('.','', $value);
@@ -36,5 +36,29 @@ function normalize_position($value) {
    return $value;
 }
 
+
+function normalize_country($value) {
+   $value = trim($value);
+
+   // global normalization
+   $value=str_replace('.','', $value);
+
+   return $value;
+}
+
+function sanitize_input($value) {
+	//$value = mysql_real_escape_string($value);
+	
+	//the use of addslashes() for string escaping in MySQL queries can lead to SQL injection
+	//through the abuse of multibyte character sets. In his example he relies on addslashes()
+	//to convert an invalid multibyte sequence into a valid one, which also has an embedded ' that 
+	//is not escaped. And in an ironic twist, the function intended to protect against SQL injection 
+	// is used to actually trigger it. 
+
+	$value = addcslashes($value, '%_');
+	$value = trim($value);
+	$value = htmlspecialchars($value);
+	return $value;
+}
 
 ?>

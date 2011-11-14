@@ -4,16 +4,20 @@
  * Génère le gexf des scholars à partir de la base sqlite
  */
 include("parametres.php");
-include("../common/library/fonctions_php.php");
+//include("../common/library/fonctions_php.php");
 include("normalize.php");
 
 
 $base = new PDO("sqlite:" . $dbname);
 
-$filtered = array (
-  "yes", "1", 1, "0", 0, "nvgfpmeilym", "no", "mr", "ms", "", " ", "   ", null
+
+function filter_word($value) {
+  $filtered = array (
+  "yes", "1", "0", "nvgfpmeilym", "no", "mr", "ms", "", " ", "   "
   );
-  
+  return ! in_array(strtolower($value),$filtered); 
+}
+
 $categories = array(
   'a' => "Member",
   'b' => "Keywords", 
@@ -24,8 +28,9 @@ $req_getPositions = "SELECT position, count(position) AS nb FROM scholars WHERE 
 $positions = array();
 $i = 0;
 foreach ($base->query($req_getPositions) as $row) {
-    $value = trim(normalize_position($row["position"]));
-    if ( ! in_array(strtolower($value),$filtered) ) {
+    $value = normalize_position($row["position"]);
+
+    if ( filter_word($value) ) {
       if (array_key_exists($value, $positions)) {
           $positions[ $value ] += intval($row["nb"]);
       } else {
@@ -38,7 +43,7 @@ $req_getCountries = "SELECT country, count(country) AS nb FROM scholars WHERE co
 $countries = array();
 $i = 0;
 foreach ($base->query($req_getCountries) as $row) {
-    $value = trim($row["country"]);
+    $value = normalize_country($row["country"]);
     if ( ! in_array(strtolower($value),$filtered) ) {
       if (array_key_exists($value, $countries)) {
           $countries[ $value ] += intval($row["nb"]);
