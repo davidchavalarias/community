@@ -92,7 +92,7 @@ foreach ($scholars as $scholar) {
             
 }
 
-
+        
 
 // liste des termes
 $sql = "SELECT term,id,occurrences FROM terms";
@@ -108,6 +108,8 @@ foreach ($base->query($sql) as $row) {
     $terms_array[$row['id']] = $info;
 }
 }
+
+pta($term_array);
 
 $count = 1;
 

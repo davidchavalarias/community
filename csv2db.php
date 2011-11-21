@@ -28,9 +28,9 @@ $results = $base->query($query);
 $query = "DROP TABLE ". $scholars_db.";";
 $results = $base->query($query);
 
-
 $query = "CREATE TABLE terms (id integer,stemmed_key text,term text,variations text,occurrences integer)";
 $results = $base->query($query);
+
 
 $query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
 $results = $base->query($query);
@@ -53,7 +53,7 @@ global $data,$la;
 
 $row = 1;
 
-pt("opening ".$fichier);
+pt("opening ".$fichier.' delimiter should be set to ; and " ');
 
 if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     
@@ -61,8 +61,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     $query = "CREATE TABLE ".$scholars_db." (";
     $subquery=""; /* partie de la requete pour alimenter la base plus bas */
     $la=array(); // liste des noms de colonne du csv
-    $data = fgetcsv($handle, 1000, ",");
-    
+    $data = fgetcsv($handle, 1000, $file_sep);
     $count=0;
     $label_list=array();
     $terms_array=array();// tableau pour remplir la table terms
@@ -126,6 +125,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
             $ngrams=split('(,|;)',$keywords);
             
             foreach ($ngrams as $ngram) {
+                
             $ngram=str_replace("'", " ",trim($ngram));    
             if ((strlen($ngram) < 50)&&(strlen($ngram) > 0)) {
                 $gram_array = split(' ', $ngram);
@@ -151,6 +151,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
                 $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed].',';   
                 $scholar_ngrams_count+=1;
                 $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('".$scholar."',".$ngram_id[$ngram_stemmed].")";                
+                pt($query);
                 $results = $base->query($query);                           
             }
         }         
@@ -225,7 +226,8 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     fclose($handle);
 }
 
-print_r($terms_array);
+
+
 $id=0;
 pt('inserting terms '.count($terms_array));
 $stemmed_ngram_list=array_keys($terms_array);
