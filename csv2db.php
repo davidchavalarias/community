@@ -114,7 +114,12 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
         // analyse des mots clefs
             $scholar_count+=1;
-            $scholar=str_replace(' ','_',$data[$la['First_Name']].' '.$data[$la['Second_fist_name_initials']].' '.$data[$la['Last_Name']]);                        
+            if ($la['First_Name']!=NULL){
+                $scholar=$data[$la['login']];                                        
+                
+            }else{
+                $scholar=str_replace(' ','_',$data[$la['First_Name']].' '.$data[$la['Second_fist_name_initials']].' '.$data[$la['Last_Name']]);                                        
+            }
             $scholar_ngrams='';
             $scholar_ngrams_ids='';
             $scholar_ngrams_count=0;

@@ -13,6 +13,23 @@ $base = new PDO("sqlite:" . $dbname);
 $termsMatrix = array(); // liste des termes présents chez les scholars avec leurs cooc avec les autres termes
 $scholarsMatrix = array(); // liste des scholars avec leurs cooc avec les autres termes
 $scholarsIncluded=0;
+
+// on récupère les paramètres
+$scholar_filter='';
+if(isset( $_GET['labs'])){
+        $labs=split(',',$_GET['labs']);    
+        $scholar_filter.='(';        
+        foreach($labname as $value){
+            $scholar_filter.='lab='.$value.' OR';            
+        }
+        if (count($labs)>1){
+            $scholar_filter=substr($scholar_filter,1,-2);            
+        }
+        $scholar_filter.=' AND ';
+    } 
+
+    
+
 // Ecriture de l'entête du gexf
 
 $gexf.='<gexf xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gephi.org/gexf/viz" version="1.1"> ';
@@ -34,6 +51,9 @@ $gexf.="<nodes>" . "\n";
 
 // liste des chercheurs
 $sql = "SELECT * FROM scholars ".$scholar_filter;
+
+
+
 $scholars = array();
 //$query = "SELECT * FROM scholars";
 foreach ($base->query($sql) as $row) {
