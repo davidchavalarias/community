@@ -16,16 +16,16 @@ $scholarsIncluded=0;
 
 // on récupère les paramètres
 $scholar_filter='';
-if(isset( $_GET['labs'])){
-        $labs=split(',',$_GET['labs']);    
+if(isset( $_POST['labs'])){
+        $labs=$_POST['labs'];    
         $scholar_filter.='(';        
-        foreach($labname as $value){
+        foreach($labs as $labname){
             $scholar_filter.='lab='.$value.' OR';            
         }
         if (count($labs)>1){
             $scholar_filter=substr($scholar_filter,1,-2);            
         }
-        $scholar_filter.=' AND ';
+        $scholar_filter.=')';
     } 
 
     
