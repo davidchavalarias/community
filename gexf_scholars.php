@@ -15,20 +15,20 @@ $scholarsMatrix = array(); // liste des scholars avec leurs cooc avec les autres
 $scholarsIncluded=0;
 
 // on récupère les paramètres
-$scholar_filter='';
-if(isset( $_POST['labs'])){
-        $labs=$_POST['labs'];    
-        $scholar_filter.='(';        
-        foreach($labs as $labname){
-            $scholar_filter.='lab='.$value.' OR';            
-        }
-        if (count($labs)>1){
-            $scholar_filter=substr($scholar_filter,1,-2);            
-        }
-        $scholar_filter.=')';
-    } 
-
-    
+//$scholar_filter='';
+//if(isset( $_POST['labs'])){
+//        $labs=$_POST['labs'];    
+//        $scholar_filter.='(';        
+//        foreach($labs as $labname){
+//            $scholar_filter.='lab='.$value.' OR';            
+//        }
+//        if (count($labs)>1){
+//            $scholar_filter=substr($scholar_filter,1,-2);            
+//        }
+//        $scholar_filter.=')';
+//    } 
+//
+//    
 
 // Ecriture de l'entête du gexf
 
@@ -51,6 +51,7 @@ $gexf.="<nodes>" . "\n";
 
 // liste des chercheurs
 $sql = "SELECT * FROM scholars ".$scholar_filter;
+pt($sql);
 
 
 
@@ -129,7 +130,6 @@ foreach ($base->query($sql) as $row) {
 }
 }
 
-pta($term_array);
 
 $count = 1;
 
@@ -142,7 +142,7 @@ foreach ($terms_array as $term) {
         foreach ($base->query($query) as $row) {
             $term_scholars[] = $row['scholar']; // ensemble des scholars partageant ce term
         }
-        // on en profite pour construire le réseau des scholars partageant les mêmes termes
+        // on en profite pour construire le réseau des scholars partageant les mêmes termes 
         for ($k = 0; $k < count($term_scholars); $k++) {
             if ($scholarsMatrix[$term_scholars[$k]] != null) {
                 $scholarsMatrix[$term_scholars[$k]][occ] = $scholarsMatrix[$term_scholars[$k]][occ] + 1;
@@ -168,8 +168,9 @@ foreach ($terms_array as $term) {
                     }
                 }
             }
-        }
+        } 
     }
+    
         $nodeId = 'N::' . $term['id'];
         $nodeLabel = str_replace('&',' and ',$terms_array[$term['id']]['term']);
         $nodePositionY = rand(0, 100) / 100;
@@ -187,7 +188,7 @@ foreach ($terms_array as $term) {
 
 foreach ($scholars as $scholar) {
         //pt($scholar['unique_id']. '-'.count($scholarsMatrix[$scholar['unique_id']]['cooc']));
-        if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>=$min_num_friends){
+        if (count($scholarsMatrix[$scholar['unique_id']]['cooc'])>$min_num_friends){// > car chacun est son propre ami
             $scholarsIncluded+=1;
         $nodeId = 'D::' . $scholar['unique_id'];
         $nodeLabel = $scholar['title']. ' ' . $scholar['first_name'] . ' ' . $scholar['initials'] . ' ' . $scholar['last_name'];
