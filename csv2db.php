@@ -14,8 +14,11 @@ $base = new PDO("sqlite:".$dbname);
 echo 'creating tables<br/>';
 
 if ($drop_tables){
-/* on efface les tables et on la recrée*/
+/* on efface les tables et on la recrée */
 
+$query = "DROP TABLE data;";
+$results = $base->query($query);    
+    
 $query = "DROP TABLE terms;";
 $results = $base->query($query);
 
@@ -28,13 +31,33 @@ $results = $base->query($query);
 $query = "DROP TABLE ". $scholars_db.";";
 $results = $base->query($query);
 
-$query = "CREATE TABLE terms (id integer,stemmed_key text,term text,variations text,occurrences integer)";
+
+$query = "DROP TABLE labs;";
+$results = $base->query($query);    
+    
+$query = "DROP TABLE labs2terms;";
 $results = $base->query($query);
 
+
+
+
+$query = "CREATE TABLE data (name text,content text)";
+$results = $base->query($query);
+
+
+$query = "CREATE TABLE terms (id integer,stemmed_key text,term text,variations text,occurrences integer)";
+$results = $base->query($query);
 
 $query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
 $results = $base->query($query);
 
+$query = "CREATE TABLE labs (id integer,name text,acronym text,homepage text,
+    keywords text,country text,address text,organization text,organization2 text,object text,methods text, director text,
+    admin text, phone text,fax text,login text)";
+$results = $base->query($query);
+
+$query = "CREATE TABLE labs2terms (labs text,term_id interger)";
+$results = $base->query($query);
 
 $query = "CREATE TABLE scholars (id integer,unique_id text,country text,
     title text,first_name text,initials text,last_name text,position text,
@@ -54,10 +77,9 @@ global $data,$la;
 
 $row = 1;
 
-pt("opening ".$fichier.' delimiter should be set to ; and " ');
-
+pt("opening ".$fichier.' delimiter should be set to '.$file_sep.' and " ');
 if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
-    
+
     /* On crée les entrée de la table avec la première ligne */
     $query = "CREATE TABLE ".$scholars_db." (";
     $subquery=""; /* partie de la requete pour alimenter la base plus bas */
@@ -99,7 +121,7 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     $subquery = substr($subquery, 0, -1);
     pt("sous requete: " . $subquery);
     pt("Creating table with : " . $query);
-    $results = $base->query($query);   
+    //$results = $base->query($query);   
 
     $heading[]='corp_id';
     $heading[]='doc_id';
@@ -116,8 +138,14 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     $ngram_id=array();
     $scholar_count=0;
     while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
-        if ((strcmp($data[$la['Do_you_want_to_appear_in_the_CSS_Whos_who_']],'Yes')==0)&&($data[$la['Last_Name']]!=NULL)){
-        pt($data[$la['Do_you_want_to_appear_in_the_CSS_Whos_who_']]);
+        if ($all){
+            $cond=(strcmp($data[$la['Last_Name']], 'No')!=0);
+        }else{
+            $cond=((strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']],'Yes')==0)&&($data[$la['Last_Name']]!=NULL));
+        }
+        
+        if ($cond){
+        pt($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']]);
         pt($data[$la['Last_Name']]);
             
         // analyse des mots clefs
@@ -283,34 +311,167 @@ for ($i=0;$i<count($stemmed_ngram_list);$i++){
     
 }
 
-fclose($handle);
 
 copy($output_file,'community.csv');
 pt($output_file.' copied');
 pt($row.' scholars processed');
 
-// on enregistre la white list
-$base = new PDO("sqlite:".$dbname.'_data');    
-$white_list_serialized=serialize($white_list);
 
-$query = "DROP TABLE data;";
+$query = "INSERT INTO data (name,content) VALUES ('whitelist','" . $white_list_serialized . "')";
 $results = $base->query($query);
 
-$query = "CREATE TABLE data (name text,content text)";
-$results = $base->query($query);
+//$sql = "SELECT * FROM data WHERE name='whitelist'";
+//pt($sql);
+//foreach ($base->query($sql) as $row) {
+//    $white_list=unserialize($row['content']);
+//    pt('whitelist:');
+//    pta($white_list);   
+//    
+//}
+/////////// Analyse des laboratoires
 
-$query = "INSERT INTO data (name,content) VALUES ('whitelist','".$white_list_serialized."')";  
-$results = $base->query($query);
+pt("opening " . $lab_csv . ' delimiter should be set to ; and " ');
+if (($handle = fopen($lab_csv, "r", "UTF-8")) !== FALSE) {
+
+    $la = array(); // liste des noms de colonne du csv
+    $data = fgetcsv($handle, 1000, $file_sep);
+    $count = 0;
+    $label_list = array();
+    $lab_terms_array = array(); // tableau pour remplir la table terms
+    // on prépare les colonnes pour la table de données brutes
+    $num = count($data);
+    pt("number of columns: " . $num);
+    for ($c = 0; $c < $num; $c++) {
+        $temp = split('--', $data[$c]);
+        $label = str_replace(' ', '_', trim($temp[0]));
+        $label = str_replace(':', '', $label);
+        $label = str_replace("'", '', $label);
+        $label = str_replace("?", '', $label);
+        $label = str_replace("-", '_', $label);
+        $label = str_replace(",", '_', $label);
+        $label = str_replace("(", '', $label);
+        $label = str_replace(")", '', $label);
 
 
-$sql = "SELECT * FROM data WHERE name='whitelist'";
-pt($sql);
-foreach ($base->query($sql) as $row) {
-    $white_list=unserialize($row['content']);
-    pt('whitelist:');
-    pta($white_list);   
-    
+        $subquery = $subquery . $label . ',';
+        $la[$label] = $c;
+        if ($label_list[$label] == 1) { // si le label existe déjà on lui colle un post_fix pour éviter les doublon de fields
+            $label.='_2';
+        }
+        $label_list[$label] = 1;
+        $query = $query . $label . ' text,';
+        pt($label);
+    }
+
+    // on analyse le csv
+    $ngram_id = array();
+    while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
+
+        pt($data[$la['legal_name']]);
+        if ($data[$la['legal_name']] != NULL) {
+            // analyse des mots clefs
+            $count+=1;
+            $lab = trim($data[$la['legal_name']]);                        
+            $lab_ngrams = '';
+            $lab_ngrams_ids = '';
+            $lab_ngrams_count = 0;
+            $keywords = $data[$la['Keywords']];
+            $keywords = str_replace(".", ', ', $keywords);
+            $keywords = str_replace("-", ' ', $keywords);
+            $ngrams = split('(,|;)', $keywords);
+
+            foreach ($ngrams as $ngram) {
+                $ngram = str_replace("'", " ", trim($ngram));
+                if ((strlen($ngram) < 50) && (strlen($ngram) > 0)) {
+                    $gram_array = split(' ', $ngram);
+                    $ngram_stemmed = '';
+                    if (count($gram_array) == 2) {
+                        natsort($gram_array);
+                    }
+                    foreach ($gram_array as $gram) {
+                        $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
+                    }
+                    $ngram_stemmed = trim($ngram_stemmed);
+                    if (array_key_exists($ngram_stemmed, $lab_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
+                        if (array_key_exists($ngram, $lab_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
+                            $lab_terms_array[$ngram_stemmed][$ngram]+=1;
+                        } else {
+                            $lab_terms_array[$ngram_stemmed][$ngram] = 1;
+                        }
+                    } else {
+                        $lab_terms_array[$ngram_stemmed][$ngram] = 1;
+                        $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
+                    }
+                    $lab_ngrams.=$ngram . ',';
+                    $lab_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
+                    $lab_ngrams_count+=1;
+                    $query = "INSERT INTO labs2terms (labs,term_id) VALUES ('" . $lab . "'," . $ngram_id[$ngram_stemmed] . ")";
+                    pt($query);
+                    $results = $base->query($query);
+                }
+            }
+
+            //$query = "CREATE TABLE labs (name text,acronym text,homepage text,
+//    keywords text,country text,address text,organization text,object text,frameworks, text director
+//    admin text, phone text,fax text,login text)";
+            $org_name = '';
+            if ($data[$la['Organization_this_lab_belong_to']] != null) {
+                $org_name.=$data[$la['Organization_this_lab_belong_to']];
+            } elseif ($data[$la['Organizations_name_if_not_found_in_previous_list']] != null) {
+                $org_name.=$data[$la['Organizations_name_if_not_found_in_previous_list']];
+            }
+
+            $object = '';
+            if ($data[$la['Objects_of_research']] != null) {
+                $object.=$data[$la['Objects_of_research']] . ', ';
+            }
+            if ($data[$la['Objects_of_research__free_response']] != null) {
+                $object.=$data[$la['Objects_of_research__free_response']];
+            }
+
+            $methods = '';
+            if ($data[$la['Theoretical_framework']] != null) {
+                $methods.=$data[$la['Theoretical_framework']] . ', ';
+            }
+            if ($data[$la['Theoretical_framework__free_response']] != null) {
+                $methods.=$data[$la['Theoretical_framework__free_response']];
+            }
+
+            $director = '';
+            if ($data[$la['First_Name']] != null) {
+                $director.=$data[$la['Title']] . ' ' . $data[$la['First_Name']] . ' ' . $data[$la['Last_Name']];
+            }
+
+
+            $lab_ngrams = str_replace("'", " ", $lab_ngrams); //       
+            $query = "INSERT INTO labs (id, name,acronym,homepage, keywords,country,
+                address,organization,organization2,object,methods,director,admin, phone,fax,login) VALUES 
+                (" . $count
+                    . ",'" .$lab 
+                    . "','" . $data[$la['Short_name']] 
+                    . "','" . $data[$la['Homepage']]
+                    ."','" . $keywords
+                    . "','" . $data[$la['Country']] 
+                    . "','" . $data[$la['Address']] 
+                    . "','" .$org_name
+                    . "','" .$data[$la['Second_affiliation']]
+                    . "','" .  str_replace('- Other,', ' ',str_replace('.', ', ',str_replace('  ', ' ', str_replace(',', ', ', $object))))
+                    . "','" . str_replace('- Other,', ' ',str_replace('.', ', ',str_replace('  ', ' ', str_replace(',', ', ', $methods))))
+                    . "','" . $data[$la['$director']]
+                    . "','" . $data[$la['Administrative_contact_first_and_last_name']]
+                    . "','" . $data[$la['phone']]
+                    . "','" . $data[$la['Fax']]
+                    . "','" . $data[$la['login_of_the_contributor']]
+                    . "')";
+
+            pt($query);
+            $results = $base->query($query);
+        }
+    }
 }
+//////////////////////
+
+fclose($handle);
 
 
 

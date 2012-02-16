@@ -11,20 +11,26 @@ $lab_db ="raw_lab";
 $orga_db ="raw_orga";
 $job_db ="raw_job";
 
+
+
 $fichier = "csv/CSSscholars20Oct2011.csv";//fichier utilisé pour importer les scholars en base
 $fichier = "csv/CSSscholars2Oct2011.csv";
 $fichier = "csv/CSSscholars24Oct2011.csv";
 $fichier = "csv/CSSscholars30Nov2011.csv";
 $fichier = "csv/CSSScholars5janvier2012.csv";
-$fichier = "csv/CSSScholars12Fevrier2012.csv";
+$fichier = "csv/CSSScholars14Fevrier2012.csv";
 
+$all=true;// dit s'il faut tenir compte du who's who approval
+if ($all){
+    echo 'WARNING ALL IS ON';
+}
 $target_scholar='davidchavalarias';
 //$fichier = "csv/CNRS.csv";
 //$fichier = "debug.csv";
 
-$labs="labs22Nov11";
-$orga="org22Nov11";
-$jobs="jobs22Nov11";
+$lab_csv="csv/CSLabs13Fev2012.csv";
+$orga_csv="csv/org22Nov11.csv";
+$jobs_csv="csv/jobs22Nov11.csv";
 
 $min_num_friends=0;// nombre minimal de voisin que doit avoir un scholar pour être affiché
 //$fichier = "Scholars13Sept2011.csv";
