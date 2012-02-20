@@ -11,7 +11,7 @@
         $data = fgetcsv($handle, 1000, $file_sep);
         $count = 0;
         $label_list = array();
-        $lab_terms_array = array(); // tableau pour remplir la table terms
+        $orga_terms_array = array(); // tableau pour remplir la table terms
         // on prépare les colonnes pour la table de données brutes
         $num = count($data);
         pt("number of columns: " . $num);
@@ -41,15 +41,15 @@
         $ngram_id = array();
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
-            pt($data[$la['legal_name']]);
-            if ($data[$la['legal_name']] != NULL) {
+            pt($data[$la['Legal_name']]);
+            if ($data[$la['Legal_name']] != NULL) {
                 // analyse des mots clefs
                 $count+=1;
-                $orga= trim($data[$la['legal_name']]);
+                $orga= trim($data[$la['Legal_name']]);
                 $lab_ngrams = '';
-                $lab_ngrams_ids = '';
-                $lab_ngrams_count = 0;
-                $keywords = $data[$la['Keywords']];
+                $orga_ngrams_ids = '';
+                $orga_ngrams_count = 0;
+                $keywords = $data[$la['Key_words']];
                 $keywords = str_replace(".", ', ', $keywords);
                 $keywords = str_replace("-", ' ', $keywords);
                 $ngrams = split('(,|;)', $keywords);
@@ -66,20 +66,20 @@
                             $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
                         }
                         $ngram_stemmed = trim($ngram_stemmed);
-                        if (array_key_exists($ngram_stemmed, $lab_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
-                            if (array_key_exists($ngram, $lab_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
-                                $lab_terms_array[$ngram_stemmed][$ngram]+=1;
+                        if (array_key_exists($ngram_stemmed, $orga_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
+                            if (array_key_exists($ngram, $orga_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
+                                $orga_terms_array[$ngram_stemmed][$ngram]+=1;
                             } else {
-                                $lab_terms_array[$ngram_stemmed][$ngram] = 1;
+                                $orga_terms_array[$ngram_stemmed][$ngram] = 1;
                             }
                         } else {
-                            $lab_terms_array[$ngram_stemmed][$ngram] = 1;
+                            $orga_terms_array[$ngram_stemmed][$ngram] = 1;
                             $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
                         }
                         $lab_ngrams.=$ngram . ',';
-                        $lab_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
-                        $lab_ngrams_count+=1;
-                        $query = "INSERT INTO labs2terms (labs,term_id) VALUES ('" . $orga. "'," . $ngram_id[$ngram_stemmed] . ")";
+                        $orga_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
+                        $orga_ngrams_count+=1;
+                        $query = "INSERT INTO orga2terms (orga,term_id) VALUES ('" . $orga. "'," . $ngram_id[$ngram_stemmed] . ")";
                         pt($query);
                         $results = $base->query($query);
                     }
@@ -88,54 +88,35 @@
                 //$query = "CREATE TABLE labs (name text,acronym text,homepage text,
 //    keywords text,country text,address text,organization text,object text,frameworks, text director
 //    admin text, phone text,fax text,login text)";
-                $org_name = '';
-                if ($data[$la['Organization_this_lab_belong_to']] != null) {
-                    $org_name.=$data[$la['Organization_this_lab_belong_to']];
-                } elseif ($data[$la['Organizations_name_if_not_found_in_previous_list']] != null) {
-                    $org_name.=$data[$la['Organizations_name_if_not_found_in_previous_list']];
-                }
-
+               
                 $object = '';
-                if ($data[$la['Objects_of_research']] != null) {
-                    $object.=$data[$la['Objects_of_research']] . ', ';
+                if ($data[$la['Main_Fields']] != null) {
+                    $fields.=$data[$la['Main_Fields']] . ', ';
                 }
-                if ($data[$la['Objects_of_research__free_response']] != null) {
-                    $object.=$data[$la['Objects_of_research__free_response']];
-                }
-
-                $methods = '';
-                if ($data[$la['Theoretical_framework']] != null) {
-                    $methods.=$data[$la['Theoretical_framework']] . ', ';
-                }
-                if ($data[$la['Theoretical_framework__free_response']] != null) {
-                    $methods.=$data[$la['Theoretical_framework__free_response']];
-                }
-
+               
                 $director = '';
                 if ($data[$la['First_Name']] != null) {
                     $director.=$data[$la['Title']] . ' ' . $data[$la['First_Name']] . ' ' . $data[$la['Last_Name']];
                 }
 
-
-                $lab_ngrams = str_replace("'", " ", $lab_ngrams); //       
-                $query = "INSERT INTO labs (id, name,acronym,homepage, keywords,country,
-                address,organization,organization2,object,methods,director,admin, phone,fax,login) VALUES 
+        
+                //////////
+                
+                $orga_ngrams = str_replace("'", " ", $orga_ngrams); //       
+                $query = "INSERT INTO organizations (id, name,acronym,homepage, keywords,country,
+                street,state,postal_code,fields,admin,login) VALUES 
                 (" . $count
-                        . ",'" . $lab
-                        . "','" . $data[$la['Short_name']]
-                        . "','" . $data[$la['Homepage']]
+                        . ",'" . $orga
+                        . "','" . $data[$la['Acronym']]
+                        . "','" . $data[$la['Homepage_of_the_center']]
                         . "','" . $keywords
-                        . "','" . $data[$la['Country']]
-                        . "','" . $data[$la['Address']]
-                        . "','" . $org_name
-                        . "','" . $data[$la['Second_affiliation']]
-                        . "','" . str_replace('- Other,', ' ', str_replace('.', ', ', str_replace('  ', ' ', str_replace(',', ', ', $object))))
-                        . "','" . str_replace('- Other,', ' ', str_replace('.', ', ', str_replace('  ', ' ', str_replace(',', ', ', $methods))))
-                        . "','" . $data[$la['$director']]
-                        . "','" . $data[$la['Administrative_contact_first_and_last_name']]
-                        . "','" . $data[$la['phone']]
-                        . "','" . $data[$la['Fax']]
-                        . "','" . $data[$la['login_of_the_contributor']]
+                        . "','" . $data[$la['Country']]                                
+                        . "','" . $data[$la['Street']]                    
+                        . "','" . $data[$la['State']]
+                        . "','" . $data[$la['Zip_Code']]
+                        . "','" . $data[$la['Main_Fields']]
+                        . "','" . $data[$la['Name_of_administrative_contact']]                        
+                        . "','" . $data[$la['Contributor']]
                         . "')";
 
                 pt($query);

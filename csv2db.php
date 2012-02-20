@@ -58,6 +58,15 @@ if (true) {
         $query = "CREATE TABLE scholars2terms (scholar text,term_id interger)";
         $results = $base->query($query);
 
+
+
+        $query = "CREATE TABLE scholars (id integer,unique_id text,country text,
+    title text,first_name text,initials text,last_name text,position text,
+    keywords text,keywords_ids text,nb_keywords integer,homepage text,
+    css_member text,css_voter text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text, interests text,
+    address text,city text,postal_code  text,phone  text,mobile  text,fax  text,affiliation_acronym  text,photo_url text,tags text)";
+        $results = $base->query($query);
+
         $query = "CREATE TABLE labs (id integer,name text,acronym text,homepage text,
     keywords text,country text,address text,organization text,organization2 text,object text,methods text, director text,
     admin text, phone text,fax text,login text)";
@@ -66,18 +75,15 @@ if (true) {
         $query = "CREATE TABLE labs2terms (labs text,term_id interger)";
         $results = $base->query($query);
 
-        $query = "CREATE TABLE scholars (id integer,unique_id text,country text,
-    title text,first_name text,initials text,last_name text,position text,
-    keywords text,keywords_ids text,nb_keywords integer,homepage text,
-    css_member text,css_voter text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text, interests text,
-    address text,city text,postal_code  text,phone  text,mobile  text,fax  text,affiliation_acronym  text,photo_url text,tags text)";
+
+        $query = "CREATE TABLE organizations (id integer,name text,acronym text,homepage text,
+    keywords text,country text,street text,city text,state text,postal_code text,fields text, director text,
+    admin text, phone text,fax text,login text)";
+        $results = $base->query($query);
+
+        $query = "CREATE TABLE orga2terms (orga text,term_id interger)";
         $results = $base->query($query);
     }
-    $output_file = $fichier . "_out.csv";
-
-    echo 'creating ' . $output . '<br/>';
-
-    $output = fopen($output_file, "w", "UTF-8");
 
     global $data, $la;
 
@@ -127,15 +133,6 @@ if (true) {
         pt("sous requete: " . $subquery);
         pt("Creating table with : " . $query);
         //$results = $base->query($query);   
-
-        $heading[] = 'corp_id';
-        $heading[] = 'doc_id';
-        $heading[] = 'title';
-        $heading[] = 'doc_acrnm';
-        $heading[] = 'abstract';
-        $heading[] = 'keywords';
-        fputcsv($output, $heading, $file_sep, '"');
-
         // white list
         $white_list = array();
 
@@ -143,16 +140,16 @@ if (true) {
         $ngram_id = array();
         $scholar_count = 0;
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
-            
+
             if ($all) {
                 $cond = (strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']], 'No') != 0);
             } else {
                 //$cond = ((strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL));
                 $cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
             }
-            
+
             if ($cond) {
-                
+
                 // analyse des mots clefs
                 $scholar_count+=1;
                 if ($data[$la['Last_Name']] != NULL) {
@@ -196,7 +193,7 @@ if (true) {
                         $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
                         $scholar_ngrams_count+=1;
                         $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('" . $scholar . "'," . $ngram_id[$ngram_stemmed] . ")";
-                        pt($query);
+                        //pt($query);
                         $results = $base->query($query);
                     }
                 }
@@ -230,7 +227,7 @@ if (true) {
                             . "','" . $data[$la['Communities_tags']]
                             . "')";
 
-                    pt($query);
+                   // pt($query);
 
 
                     $results = $base->query($query);
@@ -241,7 +238,6 @@ if (true) {
 
                 $num = count($data);
                 $row++;
-                $profile = array();
                 $corp_id = str_replace(' ', '_', $data[$la['Country']]);
                 $doc_id = $data[$la['itemId']];
                 $title = trim($data[$la['First_Name']] . ' ' . $data[$la['Last_Name']]);
@@ -253,20 +249,6 @@ if (true) {
                         section('Keywords', 'Keywords');
                 $keywords = merge('Personal_Interest');
 
-
-                $profile[] = $corp_id;
-                $profile[] = $doc_id;
-                $profile[] = $title;
-                $profile[] = $doc_acrnm;
-                $profile[] = $abstract;
-                $profile[] = $keywords;
-
-
-                if ($title != null) {
-                    fputcsv($output, $profile, ',', '"');
-                    pt($title);
-                }
-
                 $values = "'" . $data[0] . "'";
                 for ($c = 1; $c < $num; $c++) {
                     $values = $values . ",'" . $data[$c] . "'";
@@ -275,10 +257,10 @@ if (true) {
                 $query = "INSERT INTO " . $scholars_db . "(" . $subquery . ") VALUES (" . $values . ")";
                 /* $query = "INSERT INTO $scholars_db(ID, post_title, post_content, post_author, post_date, guid) 
                   VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"; */
-                pt($query);
+                //pt($query);
                 //$results = $base->query($query);                       
                 if ($results) {
-                    pt('requete OK');
+                    //pt('requete OK');
                 }
             }
         }
@@ -294,16 +276,16 @@ if (true) {
         $stemmed_ngram = $stemmed_ngram_list[$i];
         $ngram_forms = $terms_array[$stemmed_ngram];
         $ngram_forms_list = array_keys($ngram_forms);
-        pt($id);
+        //pt($id);
         $most_common_form = array_search(max($ngram_forms), $ngram_forms);
-        pt($most_common_form);
+        //pt($most_common_form);
         $most_common_form = str_replace('"', '', $most_common_form);
         $variantes = array_keys($ngram_forms);
         $variations = implode('***', $variantes);
         //$query = "INSERT INTO terms (id,stemmed_key,term,variations,occurrences) VALUES ('".$id."','".$stemmed_ngram."','".$most_common_form."','".$variations."','".sum($ngram_forms).")";        
 
         $query = "INSERT INTO terms (id,stemmed_key,term,variations,occurrences) VALUES ('" . $ngram_id[$stemmed_ngram] . "','" . $stemmed_ngram . "','" . $most_common_form . "','" . $variations . "'," . array_sum($ngram_forms) . ")";
-        pt($query);
+        //pt($query);
         $results = $base->query($query);
 
         //on ralonge la white liste
@@ -313,9 +295,6 @@ if (true) {
     }
 
 
-    copy($output_file, 'community.csv');
-    pt($output_file . ' copied');
-    pt($row . ' scholars processed');
 
 
     $query = "INSERT INTO data (name,content) VALUES ('whitelist','" . $white_list_serialized . "')";
@@ -329,17 +308,16 @@ if (true) {
 //    pta($white_list);   
 //    
 //}
-
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
 ///////////////////////////////////////////
-include(labs_process.php);    
-    
+    include('labs_process.php');
+
 ///////////////////////////////////////////
 /////////// Analyse des organisations //////
 ///////////////////////////////////////////
 
-include(orga_process.php);
+    include('orga_process.php');
 //////////////////////
 }
 fclose($handle);

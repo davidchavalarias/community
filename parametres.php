@@ -33,7 +33,7 @@ $target_scholar='davidchavalarias';
 //$fichier = "debug.csv";
 
 
-$orga_csv="csv/org22Nov11.csv";
+//$orga_csv="csv/org22Nov11.csv";
 $jobs_csv="csv/jobs22Nov11.csv";
 
 $min_num_friends=0;// nombre minimal de voisin que doit avoir un scholar pour être affiché
