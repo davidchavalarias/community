@@ -18,9 +18,13 @@ $fichier = "csv/CSSscholars2Oct2011.csv";
 $fichier = "csv/CSSscholars24Oct2011.csv";
 $fichier = "csv/CSSscholars30Nov2011.csv";
 $fichier = "csv/CSSScholars5janvier2012.csv";
-$fichier = "csv/CSSScholars14Fevrier2012.csv";
+$fichier = "csv/ScholarsFrench19fev_2012.csv";
+//$fichier="/var/log/tiki/tracker_19.csv";
+$lab_csv="/var/log/tiki/tracker_45.csv";
+$orga_csv="/var/log/tiki/tracker_7.csv";
 
-$all=true;// dit s'il faut tenir compte du who's who approval
+
+$all=false;// dit s'il faut tenir compte du who's who approval
 if ($all){
     echo 'WARNING ALL IS ON';
 }
@@ -28,7 +32,7 @@ $target_scholar='davidchavalarias';
 //$fichier = "csv/CNRS.csv";
 //$fichier = "debug.csv";
 
-$lab_csv="csv/CSLabs13Fev2012.csv";
+
 $orga_csv="csv/org22Nov11.csv";
 $jobs_csv="csv/jobs22Nov11.csv";
 
@@ -43,7 +47,7 @@ $file_sep=',';
 //$scholar_filter=" where country='France' AND status='o'";
 //$scholar_filter=" where country='France' AND want_whoswho='Yes' AND css_member='Yes'";
 //$scholar_filter="where css_member='Yes' AND want_whoswho='Yes'";
-//$scholar_filter="where want_whoswho='Yes'";
+$scholar_filter="where want_whoswho='Yes'";
 //$scholar_filter="where css_member='Yes'";
 //$scholar_filter="";
 $scholar_filter=" where country='France' AND want_whoswho='Yes'";
