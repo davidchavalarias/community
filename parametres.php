@@ -19,7 +19,7 @@ $fichier = "csv/CSSscholars24Oct2011.csv";
 $fichier = "csv/CSSscholars30Nov2011.csv";
 $fichier = "csv/CSSScholars5janvier2012.csv";
 $fichier = "csv/ScholarsFrench19fev_2012.csv";
-//$fichier="/var/log/tiki/tracker_19.csv";
+$fichier="/var/log/tiki/tracker_19.csv";
 $lab_csv="/var/log/tiki/tracker_45.csv";
 $orga_csv="/var/log/tiki/tracker_7.csv";
 

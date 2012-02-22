@@ -1,5 +1,5 @@
 <?php
-
+echo '$file_sep:'.$file_sep;
 echo '<meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>';
 /*
  * To change this template, choose Tools | Templates
@@ -43,6 +43,12 @@ if (true) {
         $results = $base->query($query);
 
         $query = "DROP TABLE labs2terms;";
+        $results = $base->query($query);
+
+        $query = "DROP TABLE organizations;";
+        $results = $base->query($query);
+
+        $query = "DROP TABLE orga2terms;";
         $results = $base->query($query);
 
 
@@ -139,8 +145,9 @@ if (true) {
         // on analyse le csv
         $ngram_id = array();
         $scholar_count = 0;
+       
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
-
+            
             if ($all) {
                 $cond = (strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']], 'No') != 0);
             } else {
@@ -149,7 +156,7 @@ if (true) {
             }
 
             if ($cond) {
-
+                echo 'in the csv<br/>';
                 // analyse des mots clefs
                 $scholar_count+=1;
                 if ($data[$la['Last_Name']] != NULL) {
@@ -157,6 +164,7 @@ if (true) {
                 } else {
                     $scholar = str_replace(' ', '_', $data[$la['First_Name']] . ' ' . $data[$la['Second_fist_name_initials']] . ' ' . $data[$la['Last_Name']]);
                 }
+                echo $scholar;
                 $scholar_ngrams = '';
                 $scholar_ngrams_ids = '';
                 $scholar_ngrams_count = 0;
@@ -199,8 +207,11 @@ if (true) {
                 }
 
                 $scholar_ngrams = str_replace("'", " ", $scholar_ngrams); //
-
-
+                $personal_interests=$data[$la['Personal_Interest']];
+                if (strlen($personal_interests)>1000){
+                    $personal_interests=substr($personal_interests,0,1000).' [...]';
+                }
+                
                 if (($data[$la['First_Name']] != null) && ($data[$la['Last_Name']] != null)) {
 
                     $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
@@ -215,7 +226,7 @@ if (true) {
                             . "','" . $data[$la['Lab']] . "','" . $data[$la['Institutional_affiliation']]
                             . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_Institutional_affiliation']]
                             . "','" . $data[$la['Do_you_want_to_appear_in_the_CSS_Whos_who_']]
-                            . "','" . $data[$la['Personal_Interest']]
+                            . "','" . $personal_interests
                             . "','" . $data[$la['Address']]
                             . "','" . $data[$la['City']]
                             . "','" . $data[$la['Postal_Code']]
@@ -267,7 +278,7 @@ if (true) {
     }
 
 
-
+    pt($scholar_count.' scholars processed');
     $id = 0;
     pt('inserting terms ' . count($terms_array));
     $stemmed_ngram_list = array_keys($terms_array);
@@ -317,7 +328,7 @@ if (true) {
 /////////// Analyse des organisations //////
 ///////////////////////////////////////////
 
-    include('orga_process.php');
+   include('orga_process.php');
 //////////////////////
 }
 fclose($handle);
