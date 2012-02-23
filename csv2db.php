@@ -10,6 +10,8 @@ $scriptpath = dirname(__FILE__);
 include($scriptpath . "/parametres.php");
 include("$scriptpath.'/../common/library/fonctions_php.php");
 
+$orga_array=array();// liste des organizations pour l'auto complete
+$labs_array=array();// liste des labs pour l'auto complete
 
 //if (!file_exists("/var/log/tiki/trackerlock_19.txt")) {
 if (true) {
@@ -237,6 +239,10 @@ if (true) {
                             . "','" . $data[$la['Photo']]
                             . "','" . $data[$la['Communities_tags']]
                             . "')";
+                    $orga_array[]=$data[$la['Institutional_affiliation']];
+                    $orga_array[]=$data[$la['Second_Institutional_affiliation']];
+                    $labs_array[]=$data[$la['Lab']];
+                    $labs_array[]=$data[$la['Second_lab']];
 
                    // pt($query);
 
@@ -279,6 +285,35 @@ if (true) {
 
 
     pt($scholar_count.' scholars processed');
+    
+    
+/// on stocke la liste des lab et des organizations pour l'auto complete
+    $labs_array=array_unique($labs_array);
+    $orga_array=array_unique($orga_array);
+    
+    $labs_string='';
+    $orga_string='';
+    foreach ($labs_array as $value) {
+        $labs_string.=';'.$value;
+    }
+    $labs_string=substr($labs_string,2);
+    
+    
+     foreach ($orga_array as $value) {
+        $orga_string.=';'.$value;
+    }
+    $orga_string=substr($orga_string,2);
+    str_replace('"', "''", $orga_string);
+    str_replace('"', "''", $labs_string);
+    
+    $query = 'INSERT INTO data (name,content) VALUES ("organizations","' . $orga_string. '")';
+    $results = $base->query($query);
+    pt($query ); 
+    
+    $query = 'INSERT INTO data (name,content) VALUES ("labs","' . $labs_string. '")';
+    $results = $base->query($query);
+    pt($query );
+    
     $id = 0;
     pt('inserting terms ' . count($terms_array));
     $stemmed_ngram_list = array_keys($terms_array);
@@ -306,8 +341,7 @@ if (true) {
     }
 
 
-
-
+    
     $query = "INSERT INTO data (name,content) VALUES ('whitelist','" . $white_list_serialized . "')";
     $results = $base->query($query);
 

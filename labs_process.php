@@ -137,7 +137,7 @@
                         . "','" . $data[$la['Fax']]
                         . "','" . $data[$la['login_of_the_contributor']]
                         . "')";
-
+                $labs_array[]=$data[$la['Short_name']];
                 pt($query);
                 $results = $base->query($query);
             }

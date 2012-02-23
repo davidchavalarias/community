@@ -119,6 +119,7 @@
                         . "','" . $data[$la['Contributor']]
                         . "')";
 
+                 $orga_array[]=$data[$la['Acronym']];                 
                 pt($query);
                 $results = $base->query($query);
             }
