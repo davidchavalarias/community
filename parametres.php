@@ -22,7 +22,7 @@ $fichier = "csv/ScholarsFrench19fev_2012.csv";
 $fichier="/var/log/tiki/tracker_19.csv";
 $lab_csv="/var/log/tiki/tracker_45.csv";
 $orga_csv="/var/log/tiki/tracker_7.csv";
-
+$jobs_csv="/var/log/tiki/tracker_20.csv";
 
 $all=false;// dit s'il faut tenir compte du who's who approval
 if ($all){
@@ -34,7 +34,7 @@ $target_scholar='davidchavalarias';
 
 
 //$orga_csv="csv/org22Nov11.csv";
-$jobs_csv="csv/jobs22Nov11.csv";
+
 
 $min_num_friends=0;// nombre minimal de voisin que doit avoir un scholar pour être affiché
 //$fichier = "Scholars13Sept2011.csv";

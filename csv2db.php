@@ -53,6 +53,11 @@ if (true) {
         $query = "DROP TABLE orga2terms;";
         $results = $base->query($query);
 
+        $query = "DROP TABLE jobs;";
+        $results = $base->query($query);
+
+        $query = "DROP TABLE jobs2terms;";
+        $results = $base->query($query);
 
 
 
@@ -91,12 +96,26 @@ if (true) {
 
         $query = "CREATE TABLE orga2terms (orga text,term_id interger)";
         $results = $base->query($query);
+        
+        $query = "CREATE TABLE jobs2terms (job_id text,term_id interger)";
+        $results = $base->query($query);
+        
+        
+        $query = "CREATE TABLE jobs (id text, title text,position text,lab text,organization text,
+            keywords text,country text, start_date text,deadline text,url text,login text)";
+        $results = $base->query($query);
+        
+        
     }
 
     global $data, $la;
 
 
     $row = 1;
+    // on analyse le csv
+    $ngram_id = array(); // ngram rencontrés tous types de données confondues
+    $scholar_count = 0;
+  
 
     pt("opening " . $fichier . ' delimiter should be set to ' . $file_sep . ' and " ');
     if (($handle = fopen($fichier, "r", "UTF-8")) !== FALSE) {
@@ -144,9 +163,7 @@ if (true) {
         // white list
         $white_list = array();
 
-        // on analyse le csv
-        $ngram_id = array();
-        $scholar_count = 0;
+    
        
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
             
@@ -158,7 +175,6 @@ if (true) {
             }
 
             if ($cond) {
-                echo 'in the csv<br/>';
                 // analyse des mots clefs
                 $scholar_count+=1;
                 if ($data[$la['Last_Name']] != NULL) {
@@ -353,6 +369,9 @@ if (true) {
 //    pta($white_list);   
 //    
 //}
+
+    
+//
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
 ///////////////////////////////////////////
@@ -363,6 +382,13 @@ if (true) {
 ///////////////////////////////////////////
 
    include('orga_process.php');
+   
+     ///////////////////////////////////////////
+/////////// Analyse des jobs//////
+///////////////////////////////////////////
+
+   include('job_process.php');   
+
 //////////////////////
 }
 fclose($handle);

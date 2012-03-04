@@ -4,14 +4,14 @@
 ///////////////////////////////////////////
 
     
-    pt("opening " . $orga_csv . ' delimiter should be set to ; and " ');
-    if (($handle = fopen($orga_csv, "r", "UTF-8")) !== FALSE) {
+    pt("opening " . $jobs_csv . ' delimiter should be set to ; and " ');
+    if (($handle = fopen($jobs_csv, "r", "UTF-8")) !== FALSE) {
 
         $la = array(); // liste des noms de colonne du csv
         $data = fgetcsv($handle, 1000, $file_sep);
         $count = 0;
         $label_list = array();
-        $orga_terms_array = array(); // tableau pour remplir la table terms
+        $job_terms_array = array(); // tableau pour remplir la table terms
         // on prépare les colonnes pour la table de données brutes
         $num = count($data);
         pt("number of columns: " . $num);
@@ -41,15 +41,16 @@
         $ngram_id = array();
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
-            pt($data[$la['Legal_name']]);
-            if ($data[$la['Legal_name']] != NULL) {
+            pt($data[$la['Title']]);
+            if ($data[$la['Title']] != NULL) {
                 // analyse des mots clefs
                 $count+=1;
-                $orga= trim($data[$la['Legal_name']]);
-                $lab_ngrams = '';
-                $orga_ngrams_ids = '';
-                $orga_ngrams_count = 0;
-                $keywords = $data[$la['Key_words']];
+                $job= trim($data[$la['Title']]);
+                $job_ngrams = '';
+                $job_ngrams_ids = '';
+                $job_ngrams_count = 0;
+                $keywords = $data[$la['Keywords']];
+                pt($keywords );
                 $keywords = str_replace(".", ', ', $keywords);
                 $keywords = str_replace("-", ' ', $keywords);
                 $ngrams = split('(,|;)', $keywords);
@@ -66,20 +67,20 @@
                             $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
                         }
                         $ngram_stemmed = trim($ngram_stemmed);
-                        if (array_key_exists($ngram_stemmed, $orga_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
-                            if (array_key_exists($ngram, $orga_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
-                                $orga_terms_array[$ngram_stemmed][$ngram]+=1;
+                        if (array_key_exists($ngram_stemmed, $job_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
+                            if (array_key_exists($ngram, $job_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
+                                $job_terms_array[$ngram_stemmed][$ngram]+=1;
                             } else {
-                                $orga_terms_array[$ngram_stemmed][$ngram] = 1;
+                                $job_terms_array[$ngram_stemmed][$ngram] = 1;
                             }
                         } else {
-                            $orga_terms_array[$ngram_stemmed][$ngram] = 1;
+                            $job_terms_array[$ngram_stemmed][$ngram] = 1;
                             $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
                         }
-                        $lab_ngrams.=$ngram . ',';
-                        $orga_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
-                        $orga_ngrams_count+=1;
-                        $query = "INSERT INTO orga2terms (orga,term_id) VALUES ('" . $orga. "'," . $ngram_id[$ngram_stemmed] . ")";
+                        $job_ngrams.=$ngram . ',';
+                        $job_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
+                        $job_ngrams_count+=1;
+                        $query = "INSERT INTO jobs2terms (job_id,term_id)  VALUES ('" . $data[$la['itemId']]. "'," . $ngram_id[$ngram_stemmed] . ")";
                         pt($query);
                         $results = $base->query($query);
                     }
@@ -88,41 +89,27 @@
                 //$query = "CREATE TABLE labs (name text,acronym text,homepage text,
 //    keywords text,country text,address text,organization text,object text,frameworks, text director
 //    admin text, phone text,fax text,login text)";
-               
-                $object = '';
-                if ($data[$la['Main_Fields']] != null) {
-                    $fields.=$data[$la['Main_Fields']] . ', ';
-                }
-               
-                $director = '';
-                if ($data[$la['First_Name']] != null) {
-                    $director.=$data[$la['Title']] . ' ' . $data[$la['First_Name']] . ' ' . $data[$la['Last_Name']];
-                }
-
+                             
         
                 //////////
                 
-                $orga_ngrams = str_replace("'", " ", $orga_ngrams); //       
-                $query = "INSERT INTO organizations (id, name,acronym,homepage, keywords,country,
-                street,state,postal_code,city,fields,admin,login,phone,fax) VALUES 
-                (" . $count
-                        . ",'" . $orga
-                        . "','" . $data[$la['Acronym']]
-                        . "','" . $data[$la['Homepage']]
+                $job_ngrams = str_replace("'", " ", $job_ngrams); //       
+                $query = "INSERT INTO jobs (id, title,position,lab,organization,keywords,country,
+                start_date,deadline,url,login) VALUES 
+                (" . $data[$la['itemId']] 
+                        . ",'" . $job
+                        . "','" . $data[$la['Position']]
+                        . "','" . $data[$la['Lab']]
+                        . "','" . $data[$la['Organization']]                                                                
                         . "','" . $keywords
-                        . "','" . $data[$la['Country']]                                
-                        . "','" . $data[$la['Street']]                    
-                        . "','" . $data[$la['State']]
-                        . "','" . $data[$la['Postal_code']]
-                        . "','" . $data[$la['City']]
-                        . "','" . $data[$la['Main_Fields']]
-                        . "','" . $data[$la['Name_of_administrative_contact']]                        
-                        . "','" . $data[$la['Contributor']]
-                        . "','" . $data[$la['Phone']]
-                        . "','" . $data[$la['Fax']]
+                        . "','" . $data[$la['Country']]                    
+                        . "','" . $data[$la['Start_date']]
+                        . "','" . $data[$la['Deadline']]
+                        . "','" . $data[$la['URL']]
+                        . "','" . $data[$la['Login']]
                         . "')";
 
-                 $orga_array[]=$data[$la['Acronym']];                 
+                 $job_array[]=$job;                 
                 pt($query);
                 $results = $base->query($query);
             }
