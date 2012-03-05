@@ -5,6 +5,7 @@
 
     
     pt("opening " . $jobs_csv . ' delimiter should be set to ; and " ');
+    pt('second ngram');
     if (($handle = fopen($jobs_csv, "r", "UTF-8")) !== FALSE) {
 
         $la = array(); // liste des noms de colonne du csv
@@ -38,7 +39,6 @@
         }
 
         // on analyse le csv
-        $ngram_id = array();
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
             pt($data[$la['Title']]);
@@ -62,31 +62,24 @@
                         $ngram_stemmed = '';
                         if (count($gram_array) == 2) {
                             natsort($gram_array);
-                        }
-                        foreach ($gram_array as $gram) {
-                            $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
-                        }
-                        $ngram_stemmed = trim($ngram_stemmed);
-                        if (array_key_exists($ngram_stemmed, $job_terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
-                            if (array_key_exists($ngram, $job_terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
-                                $job_terms_array[$ngram_stemmed][$ngram]+=1;
-                            } else {
-                                $job_terms_array[$ngram_stemmed][$ngram] = 1;
-                            }
-                        } else {
-                            $job_terms_array[$ngram_stemmed][$ngram] = 1;
-                            $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
-                        }
+                    }
+                    foreach ($gram_array as $gram) {
+                        $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
+                    }
+                    $ngram_stemmed = trim($ngram_stemmed);                  
+                    if (array_key_exists($ngram_stemmed, $ngram_id)) {// si la forme stemmed du ngram a déjà été rencontrée
+                        pt($ngram_stemmed);
                         $job_ngrams.=$ngram . ',';
                         $job_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
                         $job_ngrams_count+=1;
-                        $query = "INSERT INTO jobs2terms (job_id,term_id)  VALUES ('" . $data[$la['itemId']]. "'," . $ngram_id[$ngram_stemmed] . ")";
+                        $query = "INSERT INTO jobs2terms (job_id,term_id)  VALUES ('" . $data[$la['itemId']] . "'," . $ngram_id[$ngram_stemmed] . ")";                        
                         pt($query);
                         $results = $base->query($query);
                     }
                 }
+            }
 
-                //$query = "CREATE TABLE labs (name text,acronym text,homepage text,
+            //$query = "CREATE TABLE labs (name text,acronym text,homepage text,
 //    keywords text,country text,address text,organization text,object text,frameworks, text director
 //    admin text, phone text,fax text,login text)";
                              

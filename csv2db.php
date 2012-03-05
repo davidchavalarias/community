@@ -77,7 +77,8 @@ if (true) {
     title text,first_name text,initials text,last_name text,position text,
     keywords text,keywords_ids text,nb_keywords integer,homepage text,
     css_member text,css_voter text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text, interests text,
-    address text,city text,postal_code  text,phone  text,mobile  text,fax  text,affiliation_acronym  text,photo_url text,tags text)";
+    address text,city text,postal_code  text,phone  text,mobile  text,fax  text,affiliation_acronym  text,
+    photo_url text,tags text,login text)";
         $results = $base->query($query);
 
         $query = "CREATE TABLE labs (id integer,name text,acronym text,homepage text,
@@ -234,7 +235,7 @@ if (true) {
 
                     $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
             nb_keywords, homepage,css_member,css_voter,lab,affiliation,lab2,affiliation2,want_whoswho,interests,
-            address,city,postal_code,phone,mobile,fax,affiliation_acronym,photo_url,tags) VALUES (" . $scholar_count . ",'" .
+            address,city,postal_code,phone,mobile,fax,affiliation_acronym,photo_url,tags,login) VALUES (" . $scholar_count . ",'" .
                             $scholar . "','" . $data[$la['Country']] . "','" . $data[$la['Title']] .
                             "','" . $data[$la['First_Name']] . "','" . $data[$la['Second_fist_name_initials']] . "','" . $data[$la['Last_Name']] . "','" .
                             $data[$la['Position']]
@@ -254,6 +255,7 @@ if (true) {
                             . "','" . $data[$la['Acronym_of_first_institutional_affiliations']]
                             . "','" . $data[$la['Photo']]
                             . "','" . $data[$la['Communities_tags']]
+                            . "','" . $data[$la['login']]
                             . "')";
                     $orga_array[]=$data[$la['Institutional_affiliation']];
                     $orga_array[]=$data[$la['Second_Institutional_affiliation']];
@@ -371,23 +373,24 @@ if (true) {
 //}
 
     
-//
+     ///////////////////////////////////////////
+/////////// Analyse des jobs//////
+///////////////////////////////////////////
+
+   include('job_process.php'); 
+   
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
 ///////////////////////////////////////////
-    include('labs_process.php');
+   include('labs_process.php');
 
 ///////////////////////////////////////////
 /////////// Analyse des organisations //////
 ///////////////////////////////////////////
 
-   include('orga_process.php');
+include('orga_process.php');
    
-     ///////////////////////////////////////////
-/////////// Analyse des jobs//////
-///////////////////////////////////////////
-
-   include('job_process.php');   
+  
 
 //////////////////////
 }
