@@ -99,7 +99,7 @@
                         . "','" . $data[$la['Start_date']]
                         . "','" . $data[$la['Deadline']]
                         . "','" . $data[$la['URL']]
-                        . "','" . $data[$la['Login']]
+                        . "','" . str_replace('@', 'at', $data[$la['Login']])
                         . "')";
 
                  $job_array[]=$job;                 
