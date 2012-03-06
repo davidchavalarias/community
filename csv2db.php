@@ -169,9 +169,9 @@ if (true) {
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
             
             if ($all) {
-                $cond = (strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']], 'No') != 0);
+                $cond = (strcmp($data[$la['Open_data']], 'No') != 0);
             } else {
-                //$cond = ((strcmp($data[$la['Do_you_want_to_appear_in_the_Complex_Systems_Community_Explorer']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL));
+                //$cond = ((strcmp($data[$la['Open_data']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL));
                 $cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
             }
 
@@ -244,7 +244,7 @@ if (true) {
                             "','" . $data[$la['Homepage']] . "','" . $data[$la['CSS_Member']] . "','" . $data[$la['CSS_Voters']]
                             . "','" . $data[$la['Lab']] . "','" . $data[$la['Institutional_affiliation']]
                             . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_Institutional_affiliation']]
-                            . "','" . $data[$la['Do_you_want_to_appear_in_the_CSS_Whos_who_']]
+                            . "','" . $data[$la['Open_data']]
                             . "','" . $personal_interests
                             . "','" . $data[$la['Address']]
                             . "','" . $data[$la['City']]
@@ -377,7 +377,7 @@ if (true) {
 /////////// Analyse des jobs//////
 ///////////////////////////////////////////
 
-   include('job_process.php'); 
+    include('job_process.php'); 
    
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
