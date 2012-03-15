@@ -243,7 +243,7 @@ if (true) {
                             . "','" . substr($scholar_ngrams_ids, 0, -1) . "','" . $scholar_ngrams_count .
                             "','" . $data[$la['Homepage']] . "','" . $data[$la['CSS_Member']] . "','" . $data[$la['CSS_Voters']]
                             . "','" . $data[$la['Lab']] . "','" . $data[$la['Institutional_affiliation']]
-                            . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_Institutional_affiliation']]
+                            . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_institutional_affiliation']]
                             . "','" . $data[$la['Open_data']]
                             . "','" . $personal_interests
                             . "','" . $data[$la['Address']]
