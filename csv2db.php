@@ -254,7 +254,7 @@ if (true) {
                             . "','" . $data[$la['Fax']]
                             . "','" . $data[$la['Acronym_of_first_institutional_affiliations']]
                             . "','" . $data[$la['Photo']]
-                            . "','" . $data[$la['Communities_tags']]
+                            . "','" . str_replace(' ','',$data[$la['Communities_tags']])
                             . "','" . $data[$la['login']]
                             . "')";
                     $orga_array[]=$data[$la['Institutional_affiliation']];
