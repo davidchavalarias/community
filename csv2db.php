@@ -258,7 +258,7 @@ if (true) {
                             . "','" . $data[$la['login']]
                             . "')";
                     $orga_array[]=$data[$la['Institutional_affiliation']];
-                    $orga_array[]=$data[$la['Second_Institutional_affiliation']];
+                    $orga_array[]=$data[$la['Second_institutional_affiliation']];
                     $labs_array[]=$data[$la['Lab']];
                     $labs_array[]=$data[$la['Second_lab']];
 
