@@ -1,5 +1,5 @@
 <?php
-echo '$file_sep:'.$file_sep;
+
 echo '<meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>';
 /*
  * To change this template, choose Tools | Templates
@@ -171,8 +171,8 @@ if (true) {
             if ($all) {
                 $cond = (strcmp($data[$la['Open_data']], 'No') != 0);
             } else {
-                //$cond = ((strcmp($data[$la['Open_data']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL));
-                $cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
+                $cond = (((strcmp($data[$la['Open_data']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL))||(((strcmp($data[$la['Open_data']], 'No') != 0)&& (strcmp($data[$la['CSS_Member']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL))));
+                //$cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
             }
 
             if ($cond) {
@@ -257,6 +257,8 @@ if (true) {
                             . "','" . str_replace(' ','',$data[$la['Communities_tags']])
                             . "','" . $data[$la['login']]
                             . "')";
+                    
+                    pt($la['Institutional_affiliation']);
                     $orga_array[]=$data[$la['Institutional_affiliation']];
                     $orga_array[]=$data[$la['Second_institutional_affiliation']];
                     $labs_array[]=$data[$la['Lab']];
