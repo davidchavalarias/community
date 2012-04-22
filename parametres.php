@@ -24,7 +24,7 @@ $lab_csv="/var/log/tiki/tracker_45.csv";
 $orga_csv="/var/log/tiki/tracker_7.csv";
 $jobs_csv="/var/log/tiki/tracker_20.csv";
 
-$all=false;// dit s'il faut tenir compte du who's who approval
+$all=true;// dit s'il faut tenir compte du who's who approval
 if ($all){
     echo 'WARNING ALL IS ON';
 }

@@ -3,7 +3,7 @@
 echo '<meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>';
 /*
  * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * and open the template in the editor.m
  */
 
 $scriptpath = dirname(__FILE__);
@@ -76,7 +76,7 @@ if (true) {
         $query = "CREATE TABLE scholars (id integer,unique_id text,country text,
     title text,first_name text,initials text,last_name text,position text,
     keywords text,keywords_ids text,nb_keywords integer,homepage text,
-    css_member text,css_voter text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text, interests text,
+    css_member text,css_voter text,job_market text,lab text,affiliation text,lab2 text,affiliation2 text,want_whoswho text, interests text,
     address text,city text,postal_code  text,phone  text,mobile  text,fax  text,affiliation_acronym  text,
     photo_url text,tags text,login text)";
         $results = $base->query($query);
@@ -234,7 +234,7 @@ if (true) {
                 if (($data[$la['First_Name']] != null) && ($data[$la['Last_Name']] != null)) {
 
                     $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
-            nb_keywords, homepage,css_member,css_voter,lab,affiliation,lab2,affiliation2,want_whoswho,interests,
+            nb_keywords, homepage,css_member,css_voter,job_market,lab,affiliation,lab2,affiliation2,want_whoswho,interests,
             address,city,postal_code,phone,mobile,fax,affiliation_acronym,photo_url,tags,login) VALUES (" . $scholar_count . ",'" .
                             $scholar . "','" . $data[$la['Country']] . "','" . $data[$la['Title']] .
                             "','" . $data[$la['First_Name']] . "','" . $data[$la['Second_fist_name_initials']] . "','" . $data[$la['Last_Name']] . "','" .
@@ -242,6 +242,7 @@ if (true) {
                             . "','" . str_replace('  ', ' ', str_replace(',', ', ', $scholar_ngrams))
                             . "','" . substr($scholar_ngrams_ids, 0, -1) . "','" . $scholar_ngrams_count .
                             "','" . $data[$la['Homepage']] . "','" . $data[$la['CSS_Member']] . "','" . $data[$la['CSS_Voters']]
+                            . "','" . $data[$la['On_job_market']]
                             . "','" . $data[$la['Lab']] . "','" . $data[$la['Institutional_affiliation']]
                             . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_institutional_affiliation']]
                             . "','" . $data[$la['Open_data']]
