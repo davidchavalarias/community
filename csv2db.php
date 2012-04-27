@@ -233,31 +233,31 @@ if (true) {
                 
                 if (($data[$la['First_Name']] != null) && ($data[$la['Last_Name']] != null)) {
 
-                    $query = "INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
+                    $query = 'INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
             nb_keywords, homepage,css_member,css_voter,job_market,lab,affiliation,lab2,affiliation2,want_whoswho,interests,
-            address,city,postal_code,phone,mobile,fax,affiliation_acronym,photo_url,tags,login) VALUES (" . $scholar_count . ",'" .
-                            $scholar . "','" . $data[$la['Country']] . "','" . $data[$la['Title']] .
-                            "','" . $data[$la['First_Name']] . "','" . $data[$la['Second_fist_name_initials']] . "','" . $data[$la['Last_Name']] . "','" .
-                            $data[$la['Position']]
-                            . "','" . str_replace('  ', ' ', str_replace(',', ', ', $scholar_ngrams))
-                            . "','" . substr($scholar_ngrams_ids, 0, -1) . "','" . $scholar_ngrams_count .
-                            "','" . $data[$la['Homepage']] . "','" . $data[$la['CSS_Member']] . "','" . $data[$la['CSS_Voters']]
-                            . "','" . $data[$la['On_job_market']]
-                            . "','" . $data[$la['Lab']] . "','" . $data[$la['Institutional_affiliation']]
-                            . "','" . $data[$la['Second_lab']] . "','" . $data[$la['Second_institutional_affiliation']]
-                            . "','" . $data[$la['Open_data']]
-                            . "','" . $personal_interests
-                            . "','" . $data[$la['Address']]
-                            . "','" . $data[$la['City']]
-                            . "','" . $data[$la['Postal_Code']]
-                            . "','" . $data[$la['Telephone']]
-                            . "','" . $data[$la['Mobile_Phone']]
-                            . "','" . $data[$la['Fax']]
-                            . "','" . $data[$la['Acronym_of_first_institutional_affiliations']]
-                            . "','" . $data[$la['Photo']]
-                            . "','" . str_replace(' ','',$data[$la['Communities_tags']])
-                            . "','" . $data[$la['login']]
-                            . "')";
+            address,city,postal_code,phone,mobile,fax,affiliation_acronym,photo_url,tags,login) VALUES (' . $scholar_count . ',"' .
+                            $scholar . '","' . $data[$la["Country"]] . '","' . $data[$la["Title"]] .
+                            '","' . $data[$la["First_Name"]] . '","' . $data[$la["Second_fist_name_initials"]] . '","' . $data[$la["Last_Name"]] . '","' .
+                            $data[$la["Position"]]
+                            . '","' . str_replace('"',"''",str_replace("  ", " ", str_replace(",", ", ", $scholar_ngrams)))
+                            . '","' . substr($scholar_ngrams_ids, 0, -1) . '","' . $scholar_ngrams_count .
+                            '","' . $data[$la["Homepage"]] . '","' . $data[$la["CSS_Member"]] . '","' . $data[$la["CSS_Voters"]]
+                            . '","' . $data[$la["On_job_market"]]
+                            . '","' . str_replace('"',"''",$data[$la["Lab"]]) . '","' . str_replace('"',"''",$data[$la["Institutional_affiliation"]])
+                            . '","' . str_replace('"',"''",$data[$la["Second_lab"]]) . '","' . str_replace('"',"''",$data[$la["Second_institutional_affiliation"]])
+                            . '","' . $data[$la["Open_data"]]
+                            . '","' . $personal_interests
+                            . '","' . str_replace('"',"''",$data[$la["Address"]])
+                            . '","' . $data[$la["City"]]
+                            . '","' . $data[$la["Postal_Code"]]
+                            . '","' . $data[$la["Telephone"]]
+                            . '","' . $data[$la["Mobile_Phone"]]
+                            . '","' . $data[$la["Fax"]]
+                            . '","' . str_replace('"',"''",$data[$la["Acronym_of_first_institutional_affiliations"]])
+                            . '","' . $data[$la["Photo"]]
+                            . '","' . str_replace(" ","",$data[$la["Communities_tags"]])
+                            . '","' . $data[$la["login"]]
+                            . '")';
                     
                     pt($la['Institutional_affiliation']);
                     $orga_array[]=$data[$la['Institutional_affiliation']];
@@ -269,6 +269,9 @@ if (true) {
 
 
                     $results = $base->query($query);
+                    if (strcmp($data[$la['First_Name']], 'Cyrille')==0){
+                        pt($query);
+                    }
                 }
 
                 //
