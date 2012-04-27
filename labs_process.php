@@ -140,6 +140,10 @@
                 $labs_array[]=$data[$la["Short_name"]];
                 pt($query);
                 $results = $base->query($query);
+                if (strcmp($data[$la['Short_name']], 'LIP6')==0){
+                        pt($query);
+                    }
+                
             }
         }
     }

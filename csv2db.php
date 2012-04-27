@@ -269,9 +269,7 @@ if (true) {
 
 
                     $results = $base->query($query);
-                    if (strcmp($data[$la['First_Name']], 'Cyrille')==0){
-                        pt($query);
-                    }
+                    
                 }
 
                 //
