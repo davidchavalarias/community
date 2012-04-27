@@ -87,20 +87,20 @@
                 //////////
                 
                 $job_ngrams = str_replace("'", " ", $job_ngrams); //       
-                $query = "INSERT INTO jobs (id, title,position,lab,organization,keywords,country,
+                $query = 'INSERT INTO jobs (id, title,position,lab,organization,keywords,country,
                 start_date,deadline,url,login) VALUES 
-                (" . $data[$la['itemId']] 
-                        . ",'" . $job
-                        . "','" . $data[$la['Position']]
-                        . "','" . $data[$la['Lab']]
-                        . "','" . $data[$la['Organization']]                                                                
-                        . "','" . $keywords
-                        . "','" . $data[$la['Country']]                    
-                        . "','" . $data[$la['Start_date']]
-                        . "','" . $data[$la['Deadline']]
-                        . "','" . $data[$la['URL']]
-                        . "','" . str_replace('@', 'at', $data[$la['Login']])
-                        . "')";
+                (' . $data[$la["itemId"]] 
+                        . ',"' . str_replace('"',"''",$job)
+                        . '","' . $data[$la["Position"]]
+                        . '","' . str_replace('"',"''",$data[$la["Lab"]])
+                        . '","' . str_replace('"',"''",$data[$la["Organization"]])
+                        . '","' . str_replace('"',"''",$keywords)
+                        . '","' . $data[$la["Country"]]                    
+                        . '","' . $data[$la["Start_date"]]
+                        . '","' . $data[$la["Deadline"]]
+                        . '","' . $data[$la["URL"]]
+                        . '","' . str_replace("@", "[at]", $data[$la["Login"]])
+                        . '")';
 
                  $job_array[]=$job;                 
                 pt($query);

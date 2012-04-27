@@ -103,25 +103,24 @@
                 //////////
                 
                 $orga_ngrams = str_replace("'", " ", $orga_ngrams); //       
-                $query = "INSERT INTO organizations (id, name,acronym,homepage, keywords,country,
+                $query = 'INSERT INTO organizations (id, name,acronym,homepage, keywords,country,
                 street,state,postal_code,city,fields,admin,login,phone,fax) VALUES 
-                (" . $count
-                        . ",'" . $orga
-                        . "','" . $data[$la['Acronym']]
-                        . "','" . $data[$la['Homepage']]
-                        . "','" . $keywords
-                        . "','" . $data[$la['Country']]                                
-                        . "','" . $data[$la['Street']]                    
-                        . "','" . $data[$la['State']]
-                        . "','" . $data[$la['Postal_code']]
-                        . "','" . $data[$la['City']]
-                        . "','" . $data[$la['Main_Fields']]
-                        . "','" . $data[$la['Name_of_administrative_contact']]                        
-                        . "','" . $data[$la['Contributor']]
-                        . "','" . $data[$la['Phone']]
-                        . "','" . $data[$la['Fax']]
-                        . "')";
-
+                (' . $count
+                        . ',"' . str_replace('"',"''",$orga)
+                        . '","' . str_replace('"',"''",$data[$la["Acronym"]])
+                        . '","' . $data[$la["Homepage"]]
+                        . '","' . str_replace('"',"''",$keywords)
+                        . '","' . $data[$la["Country"]]                                
+                        . '","' . str_replace('"',"''",$data[$la["Street"]])                   
+                        . '","' . $data[$la["State"]]
+                        . '","' . $data[$la["Postal_code"]]
+                        . '","' . $data[$la["City"]]
+                        . '","' . $data[$la["Main_Fields"]]
+                        . '","' . str_replace('"',"''",$data[$la["Name_of_administrative_contact"]])                        
+                        . '","' . $data[$la["Contributor"]]
+                        . '","' . $data[$la["Phone"]]
+                        . '","' . $data[$la["Fax"]]
+                        . '")';
                  $orga_array[]=$data[$la['Acronym']];                 
                 pt($query);
                 $results = $base->query($query);

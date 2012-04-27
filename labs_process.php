@@ -118,26 +118,26 @@
 
 
                 $lab_ngrams = str_replace("'", " ", $lab_ngrams); //       
-                $query = "INSERT INTO labs (id, name,acronym,homepage, keywords,country,
+                $query = 'INSERT INTO labs (id, name,acronym,homepage, keywords,country,
                 address,organization,organization2,object,methods,director,admin, phone,fax,login) VALUES 
-                (" . $count
-                        . ",'" . $lab
-                        . "','" . $data[$la['Short_name']]
-                        . "','" . $data[$la['Homepage']]
-                        . "','" . $keywords
-                        . "','" . $data[$la['Country']]
-                        . "','" . $data[$la['Address']]
-                        . "','" . $org_name
-                        . "','" . $data[$la['Second_affiliation']]
-                        . "','" . str_replace('- Other,', ' ', str_replace('.', ', ', str_replace('  ', ' ', str_replace(',', ', ', $object))))
-                        . "','" . str_replace('- Other,', ' ', str_replace('.', ', ', str_replace('  ', ' ', str_replace(',', ', ', $methods))))
-                        . "','" . $data[$la['$director']]
-                        . "','" . $data[$la['Administrative_contact_first_and_last_name']]
-                        . "','" . $data[$la['phone']]
-                        . "','" . $data[$la['Fax']]
-                        . "','" . $data[$la['login_of_the_contributor']]
-                        . "')";
-                $labs_array[]=$data[$la['Short_name']];
+                (' . $count
+                        . ',"' . str_replace('"',"''",$lab)
+                        . '","' . str_replace('"',"''",$data[$la["Short_name"]])
+                        . '","' . $data[$la["Homepage"]]
+                        . '","' . $keywords
+                        . '","' . $data[$la["Country"]]
+                        . '","' . $data[$la["Address"]]
+                        . '","' . $org_name
+                        . '","' . $data[$la["Second_affiliation"]]
+                        . '","' . str_replace('"',"''",str_replace("- Other,", " ", str_replace(".", ", ", str_replace("  ", " ", str_replace(",", ", ", $object)))))
+                        . '","' . str_replace('"',"''",str_replace("- Other,", " ", str_replace(".", ", ", str_replace("  ", " ", str_replace(",", ", ", $methods)))))
+                        . '","' . $data[$la["$director"]]
+                        . '","' . $data[$la["Administrative_contact_first_and_last_name"]]
+                        . '","' . $data[$la["phone"]]
+                        . '","' . $data[$la["Fax"]]
+                        . '","' . $data[$la["login_of_the_contributor"]]
+                        . '")';
+                $labs_array[]=$data[$la["Short_name"]];
                 pt($query);
                 $results = $base->query($query);
             }
