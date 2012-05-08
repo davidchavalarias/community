@@ -191,6 +191,7 @@ if (true) {
                 $keywords = $data[$la['Keywords']];
                 $keywords = str_replace(".", '', $keywords);
                 $keywords = str_replace("-", ' ', $keywords);
+                //$ngrams = split('(,|;|/|\|)', $keywords);
                 $ngrams = split('(,|;)', $keywords);
 
                 foreach ($ngrams as $ngram) {
