@@ -34,14 +34,14 @@
             }
             $label_list[$label] = 1;
             $query = $query . $label . ' text,';
-            pt($label);
+            //pt($label);
         }
 
         // on analyse le csv
         $ngram_id = array();
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
-            pt($data[$la['legal_name']]);
+            //pt($data[$la['legal_name']]);
             if ($data[$la['legal_name']] != NULL) {
                 // analyse des mots clefs
                 $count+=1;
@@ -80,7 +80,7 @@
                         $lab_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
                         $lab_ngrams_count+=1;
                         $query = "INSERT INTO labs2terms (labs,term_id) VALUES ('" . $lab . "'," . $ngram_id[$ngram_stemmed] . ")";
-                        pt($query);
+                        //pt($query);
                         $results = $base->query($query);
                     }
                 }
@@ -138,7 +138,7 @@
                         . '","' . $data[$la["login_of_the_contributor"]]
                         . '")';
                 $labs_array[]=$data[$la["Short_name"]];
-                pt($query);
+                //pt($query);
                 $results = $base->query($query);
                 if (strcmp($data[$la['Short_name']], 'LIP6')==0){
                         pt($query);
@@ -147,5 +147,5 @@
             }
         }
     }
-
+pt(count($labs_array).' labs');
 ?>

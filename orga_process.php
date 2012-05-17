@@ -34,14 +34,14 @@
             }
             $label_list[$label] = 1;
             $query = $query . $label . ' text,';
-            pt($label);
+            //pt($label);
         }
 
         // on analyse le csv
         $ngram_id = array();
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
-            pt($data[$la['Legal_name']]);
+            //pt($data[$la['Legal_name']]);
             if ($data[$la['Legal_name']] != NULL) {
                 // analyse des mots clefs
                 $count+=1;
@@ -80,7 +80,7 @@
                         $orga_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
                         $orga_ngrams_count+=1;
                         $query = "INSERT INTO orga2terms (orga,term_id) VALUES ('" . $orga. "'," . $ngram_id[$ngram_stemmed] . ")";
-                        pt($query);
+                        //pt($query);
                         $results = $base->query($query);
                     }
                 }
@@ -122,9 +122,10 @@
                         . '","' . $data[$la["Fax"]]
                         . '")';
                  $orga_array[]=$data[$la['Acronym']];                 
-                pt($query);
+                //pt($query);
                 $results = $base->query($query);
             }
         }
     }
+    pt(count($orga_array).' organizations');
     ?>

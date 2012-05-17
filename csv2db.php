@@ -10,12 +10,11 @@ $scriptpath = dirname(__FILE__);
 include($scriptpath . "/parametres.php");
 include("$scriptpath.'/../common/library/fonctions_php.php");
 
-$orga_array=array();// liste des organizations pour l'auto complete
-$labs_array=array();// liste des labs pour l'auto complete
-
+$orga_array = array(); // liste des organizations pour l'auto complete
+$labs_array = array(); // liste des labs pour l'auto complete
+$poor_scored_scholars='';
 //if (!file_exists("/var/log/tiki/trackerlock_19.txt")) {
 if (true) {
-
     /* Creation des tables */
 
 
@@ -97,16 +96,14 @@ if (true) {
 
         $query = "CREATE TABLE orga2terms (orga text,term_id interger)";
         $results = $base->query($query);
-        
+
         $query = "CREATE TABLE jobs2terms (job_id text,term_id interger)";
         $results = $base->query($query);
-        
-        
+
+
         $query = "CREATE TABLE jobs (id text, title text,position text,lab text,organization text,
             keywords text,country text, start_date text,deadline text,url text,login text)";
         $results = $base->query($query);
-        
-        
     }
 
     global $data, $la;
@@ -116,7 +113,7 @@ if (true) {
     // on analyse le csv
     $ngram_id = array(); // ngram rencontrés tous types de données confondues
     $scholar_count = 0;
-  
+
 
     pt("opening " . $fichier . ' delimiter should be set to ' . $file_sep . ' and " ');
     if (($handle = fopen($fichier, "r", "UTF-8")) !== FALSE) {
@@ -164,75 +161,125 @@ if (true) {
         // white list
         $white_list = array();
 
-    
-       
+
+
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
-            
+            $score=0; // pour n'insérer que des personnes ayant suffisemment complété leur profil
             if ($all) {
                 $cond = (strcmp($data[$la['Open_data']], 'No') != 0);
             } else {
-                $cond = (((strcmp($data[$la['Open_data']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL))||(((strcmp($data[$la['Open_data']], 'No') != 0)&& (strcmp($data[$la['CSS_Member']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL))));
-                //$cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
+                //$cond = (((strcmp($data[$la['Open_data']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL)) || (((strcmp($data[$la['Open_data']], 'No') != 0) && (strcmp($data[$la['CSS_Member']], 'Yes') == 0) && ($data[$la['Last_Name']] != NULL))));
+               $cond=true;
+               
+               if ((strcmp($data[$la['Open_data']], 'No') == 0) && (strcmp($data[$la['CSS_Member']], 'No') == 0)){
+                $cond=false;                
+               };
+               if (strcmp($data[$la['Country']], '') == 0){
+                $cond=false;                
+               };
+               
+               if (strcmp($data[$la['Last_Name']], '') == 0){
+                $cond=false;                
+               };
+               //$cond = (($data[$la['First_Name']] != NULL) && ($data[$la['Last_Name']] != NULL));
             }
 
-            if ($cond) {
-                // analyse des mots clefs
-                $scholar_count+=1;
-                if ($data[$la['Last_Name']] != NULL) {
-                    $scholar = str_replace(' ', '_', trim($data[$la['First_Name']]) . ' ' . trim($data[$la['Second_fist_name_initials']]) . ' ' . trim($data[$la['Last_Name']]));
-                } else {
-                    $scholar = str_replace(' ', '_', $data[$la['First_Name']] . ' ' . $data[$la['Second_fist_name_initials']] . ' ' . $data[$la['Last_Name']]);
+            if ($cond){
+            // analyse des mots clefs
+            $scholar_count+=1;
+            if ($data[$la['Last_Name']] != NULL) {
+                $scholar = str_replace(' ', '_', trim($data[$la['First_Name']]) . ' ' . trim($data[$la['Second_fist_name_initials']]) . ' ' . trim($data[$la['Last_Name']]));
+            } else {
+                $scholar = str_replace(' ', '_', $data[$la['First_Name']] . ' ' . $data[$la['Second_fist_name_initials']] . ' ' . $data[$la['Last_Name']]);
+            }
+            
+            $scholar_ngrams = '';
+            $scholar_ngrams_ids = '';
+            $scholar_ngrams_count = 0;
+
+            $keywords = $data[$la['Keywords']];
+            $keywords = str_replace(".", '', $keywords);
+            $keywords = str_replace("-", ' ', $keywords);
+            //$ngrams = split('(,|;|/|\|)', $keywords);
+            $ngrams = split('(,|;)', $keywords);
+
+            
+            $personal_interests = $data[$la['Personal_Interest']];
+            
+            if (strlen($personal_interests) > 10){
+                $score+=1;
+                pt('score for personal interest');
+            }
+            
+             if (strcmp($data[$la['CSS_Member']], 'Yes') == 0){
+                pt('score for CSS');
+                 $score+=1;
+            }
+            
+            
+            
+                if (strlen($personal_interests) > 1000) {
+                    $personal_interests = substr($personal_interests, 0, 1000) . ' [...]';
                 }
-                echo $scholar;
-                $scholar_ngrams = '';
-                $scholar_ngrams_ids = '';
-                $scholar_ngrams_count = 0;
 
-                $keywords = $data[$la['Keywords']];
-                $keywords = str_replace(".", '', $keywords);
-                $keywords = str_replace("-", ' ', $keywords);
-                //$ngrams = split('(,|;|/|\|)', $keywords);
-                $ngrams = split('(,|;)', $keywords);
+                
+                   if (strlen($data[$la["Homepage"]]) > 4){
+                $score+=1;
+                pt('score for Homepage');
+            }
+                
+                   if (strlen($data[$la["Lab"]]) > 4){
+                $score+=1;
+                pt('score for lab');
+            }
+           if (strlen($la["Institutional_affiliation"]) > 4){
+                $score+=1;
+                pt('score for affiliation');
+            }
+            
+            if (strlen($keywords)>4){
+                $score+=1;
+                pt('score for keywords');
+            }
+            foreach ($ngrams as $ngram) {
 
-                foreach ($ngrams as $ngram) {
-
-                    $ngram = str_replace("'", " ", trim($ngram));
-                    if ((strlen($ngram) < 50) && (strlen($ngram) > 0)) {
-                        $gram_array = split(' ', $ngram);
-                        $ngram_stemmed = '';
-                        if (count($gram_array) == 2) {
-                            natsort($gram_array);
-                        }
-                        foreach ($gram_array as $gram) {
-                            $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
-                        }
-                        $ngram_stemmed = trim($ngram_stemmed);
-                        if (array_key_exists($ngram_stemmed, $terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
-                            if (array_key_exists($ngram, $terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
-                                $terms_array[$ngram_stemmed][$ngram]+=1;
-                            } else {
-                                $terms_array[$ngram_stemmed][$ngram] = 1;
-                            }
+                $ngram = str_replace("'", " ", trim($ngram));
+                if ((strlen($ngram) < 50) && (strlen($ngram) > 0)) {
+                    $gram_array = split(' ', $ngram);
+                    $ngram_stemmed = '';
+                    if (count($gram_array) == 2) {
+                        natsort($gram_array);
+                    }
+                    foreach ($gram_array as $gram) {
+                        $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
+                    }
+                    $ngram_stemmed = trim($ngram_stemmed);
+                    if (array_key_exists($ngram_stemmed, $terms_array)) {// si la forme stemmed du ngram a déjà été rencontrée
+                        if (array_key_exists($ngram, $terms_array[$ngram_stemmed])) {// si la forme pleine a déjà été rencontrée
+                            $terms_array[$ngram_stemmed][$ngram]+=1;
                         } else {
                             $terms_array[$ngram_stemmed][$ngram] = 1;
-                            $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
                         }
-                        $scholar_ngrams.=$ngram . ',';
-                        $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
-                        $scholar_ngrams_count+=1;
-                        $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('" . $scholar . "'," . $ngram_id[$ngram_stemmed] . ")";
-                        //pt($query);
+                    } else {
+                        $terms_array[$ngram_stemmed][$ngram] = 1;
+                        $ngram_id[$ngram_stemmed] = count($ngram_id) + 1;
+                    }
+                    $scholar_ngrams.=$ngram . ',';
+                    $scholar_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
+                    $scholar_ngrams_count+=1;
+                    $query = "INSERT INTO scholars2terms (scholar,term_id) VALUES ('" . $scholar . "'," . $ngram_id[$ngram_stemmed] . ")";
+                    //pt($query);
+                    if (($cond)&&($score>0)) {
                         $results = $base->query($query);
                     }
                 }
+            }
+            
 
                 $scholar_ngrams = str_replace("'", " ", $scholar_ngrams); //
-                $personal_interests=$data[$la['Personal_Interest']];
-                if (strlen($personal_interests)>1000){
-                    $personal_interests=substr($personal_interests,0,1000).' [...]';
-                }
                 
-                if (($data[$la['First_Name']] != null) && ($data[$la['Last_Name']] != null)) {
+                
+                if ((($data[$la['First_Name']] != null) && ($data[$la['Last_Name']] != null))&&($score>0)) {
 
                     $query = 'INSERT INTO scholars (id,unique_id,country,title,first_name,initials,last_name,position,keywords,keywords_ids,
             nb_keywords, homepage,css_member,css_voter,job_market,lab,affiliation,lab2,affiliation2,want_whoswho,interests,
@@ -240,105 +287,103 @@ if (true) {
                             $scholar . '","' . $data[$la["Country"]] . '","' . $data[$la["Title"]] .
                             '","' . $data[$la["First_Name"]] . '","' . $data[$la["Second_fist_name_initials"]] . '","' . $data[$la["Last_Name"]] . '","' .
                             $data[$la["Position"]]
-                            . '","' . str_replace('"',"''",str_replace("  ", " ", str_replace(",", ", ", $scholar_ngrams)))
+                            . '","' . str_replace('"', "''", str_replace("  ", " ", str_replace(",", ", ", $scholar_ngrams)))
                             . '","' . substr($scholar_ngrams_ids, 0, -1) . '","' . $scholar_ngrams_count .
                             '","' . $data[$la["Homepage"]] . '","' . $data[$la["CSS_Member"]] . '","' . $data[$la["CSS_Voters"]]
                             . '","' . $data[$la["On_job_market"]]
-                            . '","' . str_replace('"',"''",$data[$la["Lab"]]) . '","' . str_replace('"',"''",$data[$la["Institutional_affiliation"]])
-                            . '","' . str_replace('"',"''",$data[$la["Second_lab"]]) . '","' . str_replace('"',"''",$data[$la["Second_institutional_affiliation"]])
+                            . '","' . str_replace('"', "''", $data[$la["Lab"]]) . '","' . str_replace('"', "''", $data[$la["Institutional_affiliation"]])
+                            . '","' . str_replace('"', "''", $data[$la["Second_lab"]]) . '","' . str_replace('"', "''", $data[$la["Second_institutional_affiliation"]])
                             . '","' . $data[$la["Open_data"]]
                             . '","' . $personal_interests
-                            . '","' . str_replace('"',"''",$data[$la["Address"]])
+                            . '","' . str_replace('"', "''", $data[$la["Address"]])
                             . '","' . $data[$la["City"]]
                             . '","' . $data[$la["Postal_Code"]]
                             . '","' . $data[$la["Telephone"]]
                             . '","' . $data[$la["Mobile_Phone"]]
                             . '","' . $data[$la["Fax"]]
-                            . '","' . str_replace('"',"''",$data[$la["Acronym_of_first_institutional_affiliations"]])
+                            . '","' . str_replace('"', "''", $data[$la["Acronym_of_first_institutional_affiliations"]])
                             . '","' . $data[$la["Photo"]]
-                            . '","' . str_replace(" ","",$data[$la["Communities_tags"]])
+                            . '","' . str_replace(" ", "", $data[$la["Communities_tags"]])
                             . '","' . $data[$la["login"]]
                             . '")';
+
                     
-                    pt($la['Institutional_affiliation']);
-                    $orga_array[]=$data[$la['Institutional_affiliation']];
-                    $orga_array[]=$data[$la['Second_institutional_affiliation']];
-                    $labs_array[]=$data[$la['Lab']];
-                    $labs_array[]=$data[$la['Second_lab']];
+                    $orga_array[] = $data[$la['Institutional_affiliation']];
+                    $orga_array[] = $data[$la['Second_institutional_affiliation']];
+                    $labs_array[] = $data[$la['Lab']];
+                    $labs_array[] = $data[$la['Second_lab']];
 
-                   // pt($query);
+                    // pt($query);
 
-
-                    $results = $base->query($query);
-                    
-                }
-
-                //
-
-
-                $num = count($data);
-                $row++;
-                $corp_id = str_replace(' ', '_', $data[$la['Country']]);
-                $doc_id = $data[$la['itemId']];
-                $title = trim($data[$la['First_Name']] . ' ' . $data[$la['Last_Name']]);
-                $doc_acrnm = $title;
-
-                $abstract = $data[$la['Country']] . '.' .
-                        section('Affiliation', 'Lab,Institutional_affiliations_of_your_lab') .
-                        section('Second Affiliation', 'Second_lab,Second_institutional_affiliation') .
-                        section('Keywords', 'Keywords');
-                $keywords = merge('Personal_Interest');
-
-                $values = "'" . $data[0] . "'";
-                for ($c = 1; $c < $num; $c++) {
-                    $values = $values . ",'" . $data[$c] . "'";
-                }
-
-                $query = "INSERT INTO " . $scholars_db . "(" . $subquery . ") VALUES (" . $values . ")";
-                /* $query = "INSERT INTO $scholars_db(ID, post_title, post_content, post_author, post_date, guid) 
-                  VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"; */
-                //pt($query);
-                //$results = $base->query($query);                       
-                if ($results) {
-                    //pt('requete OK');
-                }
+                    if ($cond) {
+                        $results = $base->query($query) OR die('failure of ' . $query);
+                    }
+            }else{
+                $poor_scored_scholars.=','. $data[$la["login"]];
             }
+            pt($data[$la["Last_Name"]].'-'.$data[$la["login"]].' scored: '.$score);
+            //
+
+
+            $num = count($data);
+            $row++;
+            $corp_id = str_replace(' ', '_', $data[$la['Country']]);
+            $doc_id = $data[$la['itemId']];
+            $title = trim($data[$la['First_Name']] . ' ' . $data[$la['Last_Name']]);
+            $doc_acrnm = $title;
+
+            $abstract = $data[$la['Country']] . '.' .
+                    section('Affiliation', 'Lab,Institutional_affiliations_of_your_lab') .
+                    section('Second Affiliation', 'Second_lab,Second_institutional_affiliation') .
+                    section('Keywords', 'Keywords');
+            $keywords = merge('Personal_Interest');
+
+            $values = "'" . $data[0] . "'";
+            for ($c = 1; $c < $num; $c++) {
+                $values = $values . ",'" . $data[$c] . "'";
+            }
+
+            $query = "INSERT INTO " . $scholars_db . "(" . $subquery . ") VALUES (" . $values . ")";
+            /* $query = "INSERT INTO $scholars_db(ID, post_title, post_content, post_author, post_date, guid) 
+              VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"; */
+            //pt($query);
+            //$results = $base->query($query);                       
+        }
         }
     }
 
 
-    pt($scholar_count.' scholars processed');
-    
-    
+    pt($scholar_count . ' scholars processed');
+
 /// on stocke la liste des lab et des organizations pour l'auto complete
-    $labs_array=array_unique($labs_array);
-    $orga_array=array_unique($orga_array);
-    
-    $labs_string='';
-    $orga_string='';
+    $labs_array = array_unique($labs_array);
+    $orga_array = array_unique($orga_array);
+
+    $labs_string = '';
+    $orga_string = '';
     foreach ($labs_array as $value) {
-        $labs_string.=';'.$value;
+        $labs_string.=';' . $value;
     }
-    $labs_string=substr($labs_string,2);
-    
-    
-     foreach ($orga_array as $value) {
-        $orga_string.=';'.$value;
+    $labs_string = substr($labs_string, 2);
+
+
+    foreach ($orga_array as $value) {
+        $orga_string.=';' . $value;
     }
-    $orga_string=substr($orga_string,2);
+    $orga_string = substr($orga_string, 2);
     str_replace('"', "''", $orga_string);
     str_replace('"', "''", $labs_string);
-    
-    $query = 'INSERT INTO data (name,content) VALUES ("organizations","' . $orga_string. '")';
+
+    $query = 'INSERT INTO data (name,content) VALUES ("organizations","' . $orga_string . '")';
     $results = $base->query($query);
-    pt($query ); 
-    
-    $query = 'INSERT INTO data (name,content) VALUES ("labs","' . $labs_string. '")';
+    //pt($query);
+
+    $query = 'INSERT INTO data (name,content) VALUES ("labs","' . $labs_string . '")';
     $results = $base->query($query);
-    pt($query );
-    
+    //pt($query);
+
     $id = 0;
-    pt('inserting terms ' . count($terms_array));
+    //pt('inserting terms ' . count($terms_array));
     $stemmed_ngram_list = array_keys($terms_array);
     for ($i = 0; $i < count($stemmed_ngram_list); $i++) {
 //foreach ($terms_array as $stemmed_ngram -> $ngram_forms){
@@ -364,7 +409,7 @@ if (true) {
     }
 
 
-    
+
     $query = "INSERT INTO data (name,content) VALUES ('whitelist','" . $white_list_serialized . "')";
     $results = $base->query($query);
 
@@ -376,32 +421,32 @@ if (true) {
 //    pta($white_list);   
 //    
 //}
-
-    
-     ///////////////////////////////////////////
+    ///////////////////////////////////////////
 /////////// Analyse des jobs//////
 ///////////////////////////////////////////
 
-    include('job_process.php'); 
-   
+    include('job_process.php');
+
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
 ///////////////////////////////////////////
-   include('labs_process.php');
+    include('labs_process.php');
 
 ///////////////////////////////////////////
 /////////// Analyse des organisations //////
 ///////////////////////////////////////////
 
-include('orga_process.php');
-   
-  
+    include('orga_process.php');
+
+
 
 //////////////////////
 }
 fclose($handle);
 
-function merge($fieldlist, $sep=', ') {
+
+pt('poor scored scholars: '.$poor_scored_scholars);
+function merge($fieldlist, $sep = ', ') {
     global $data, $la;
     /* merge les champs dans $fieldlist séparés par des virgules en vérifiant qu'ils sont non vides */
     $string = '';
@@ -420,7 +465,7 @@ function merge($fieldlist, $sep=', ') {
     return $string;
 }
 
-function section($name, $content, $sep=', ') {
+function section($name, $content, $sep = ', ') {
     /* merge les champs dans $fieldlist séparés par des virgules en vérifiant qu'ils sont non vides */
     global $data, $la;
 
