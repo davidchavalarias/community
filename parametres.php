@@ -5,11 +5,13 @@ list de parametres.
  */
 
 $dbname='community.db';// nom de la base sqlite utilisée par les scripts
+$dbelections='new_councilorsECCS12.sqlite';
 //$dbname='scholar_test_data.db';
 $scholars_db ="raw_scholars";
 $lab_db ="raw_lab";
 $orga_db ="raw_orga";
 $job_db ="raw_job";
+
 
 
 
@@ -23,8 +25,9 @@ $fichier="/var/log/tiki/tracker_19.csv";
 $lab_csv="/var/log/tiki/tracker_45.csv";
 $orga_csv="/var/log/tiki/tracker_7.csv";
 $jobs_csv="/var/log/tiki/tracker_20.csv";
+$elections_csv="csv/elections/ResultsCSSCouncil_ECCS12.csv";
 
-$all=false;// dit s'il faut tenir compte du who's who approval
+$all=true;// dit s'il faut tenir compte du who's who approval
 if ($all){
     echo 'WARNING ALL IS ON';
 }
