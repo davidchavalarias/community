@@ -5,21 +5,30 @@
      * Importe un fichier csv et le mets en base sous forme de graphe
      */
 
-
-    $nodes1='projets'; // type de noeuds1
-    $nodes1_name='title';
-    $nodes1_id='doc_id';
-
-    $nodes2='keywords'; // type de noeuds2
-    $nodes2_name='doc_keywords'; // nom du champs contenant les noeuds2
-
+   
     $logs = fopen('logs.txt', "w", "UTF-8");
     
     $scriptpath = dirname(__FILE__);
+
     include($scriptpath . "/csv2generic_param.php");
+    echo $scriptpath."/../common/library/fonctions_php.php";
     include($scriptpath."/../common/library/fonctions_php.php");
     
     pt('processing '.$nodes1.' and '.$nodes2.' in '.$language);
+
+$regex = <<<'END'
+/
+  (
+    (?: [\x00-\x7F]                 # single-byte sequences   0xxxxxxx
+    |   [\xC0-\xDF][\x80-\xBF]      # double-byte sequences   110xxxxx 10xxxxxx
+    |   [\xE0-\xEF][\x80-\xBF]{2}   # triple-byte sequences   1110xxxx 10xxxxxx * 2
+    |   [\xF0-\xF7][\x80-\xBF]{3}   # quadruple-byte sequence 11110xxx 10xxxxxx * 3 
+    ){1,100}                        # ...one or more times
+  )
+| .                                 # anything else
+/x
+END;
+
 
     if (true) {
         /* Creation des tables */
@@ -88,6 +97,7 @@
                 $label = str_replace(")", '', $label);
 
 
+                if (trim($label)!=null){
                 $subquery = $subquery . $label . ',';
                 $la[$label] = $c;
                 if ($label_list[$label] == 1) { // si le label existe déjà on lui colle un post_fix pour éviter les doublon de fields
@@ -95,18 +105,21 @@
                 }
                 $label_list[$label] = 1;
                 $query = $query . $label . ' text,';
-
+    
+                }
+                
                 //pt($label);
             }
             pt('processing '.$data[$la[$nodes1]]);
-            $query = substr($query, 0, -1);
+            $query = substr(trim($query), 0, -1);
             $query = $query . ')';
 
-            $subquery = substr($subquery, 0, -1);
+            $subquery = substr(trim($subquery), 0, -1);
             pt("sous requete: " . $subquery);
             pt("Creating table with : " . $query);
             $results = $base->query($query);   
             // white list
+
             $white_list = array();
             
             while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {                
@@ -195,17 +208,20 @@
                 $row++;
       
 
-                $values = "'" . $data[0] . "'";
+                $values = '"' . $data[0] . '"';
                 for ($c = 1; $c < $num; $c++) {
-                    //if ($c==$la['html']){
-                        $values = $values . ",'" . htmlentities($data[$c], ENT_QUOTES) . "'";
-                    //}else{
-                    //    $values = $values . ",'" . str_replace("'", "\'", $data[$c]) . "'";    
-                    //}
+                    if (($c==$la[html])){
+                        $values = $values . ',"' . htmlentities(preg_replace($regex, '$1', $data[$c]), ENT_QUOTES) . '"';
+                    }else{
+                        $values = $values . ',"' . str_replace('"', '', preg_replace($regex, '$1', $data[$c])) . '"';    
+                    }
                     
                 }
 
-                $query = "INSERT INTO " . $nodes1 . "(" . $subquery . ") VALUES (" . $values . ")";
+
+
+                $query = 'INSERT INTO ' . $nodes1 . '(' . $subquery . ') VALUES (' . $values . ')';
+                db($query);
                 fputs($logs,$query.PHP_EOL);
                 /* $query = "INSERT INTO $node1s_db(ID, post_title, post_content, post_author, post_date, guid) 
                   VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"; */
@@ -285,6 +301,12 @@
         return $string;
     }
 
+    function db($text) {
+    
+        return pt($text);
+    }
+    
 
+    
     ?>
 
