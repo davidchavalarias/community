@@ -13,6 +13,10 @@
     include($scriptpath . "/csv2generic_param.php");
     echo $scriptpath."/../common/library/fonctions_php.php";
     include($scriptpath."/../common/library/fonctions_php.php");
+
+    pt('custom stop word');
+    $stop_word=explode(',','recherche,valorisation,développement, logique,analyse,logiciel,diffusion,espace,acteurs,international,informatique,dispositif,acquisition');
+
     
     pt('processing '.$nodes1.' and '.$nodes2.' in '.$language);
 
@@ -147,6 +151,8 @@ END;
                     $ngram = str_replace("'", "\'", trim($ngram));
                     $normalized_ngram=str_replace("-", ' ', $ngram);
                     $normalized_ngram2=str_replace("-", '', $ngram); // pour regrouper les termes du type co-evolution/coevolution
+
+                    if (!in_array(strtolower(trim($ngram)),$stop_word)){
                     if ((strlen($ngram) < 50) && (strlen($ngram) > 0)) {
                         
                         
@@ -200,7 +206,9 @@ END;
 
                         //pt($query);                        
                         $results = $base->query($query);                        
+                    }    
                     }
+                    
                 }                
             $node1_ngrams = str_replace("'", " ", $node1_ngrams); //
                     
@@ -232,8 +240,7 @@ END;
 
 
         pt($node1_count .' '.$nodes1. ' processed');
-    /// on ajoute des infos de région
-
+ 
         $id = 0;
         //pt('inserting terms ' . count($terms_array));
         $stemmed_ngram_list = array_keys($terms_array);

@@ -1,5 +1,5 @@
 <?php
-
+echo '<meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>';
 /*
  * Génère le gexf bipartite des noeud1 et 2 à partir de la base sqlite
  */
@@ -43,6 +43,7 @@ $gexf.=' <attribute id="1" title="occurrences" type="float">    </attribute>' . 
 $gexf.=' <attribute id="2" title="content" type="string">    </attribute>' . "\n";
 $gexf.=' <attribute id="3" title="keywords" type="string">   </attribute>' . "\n";
 $gexf.=' <attribute id="4" title="weight" type="float">   </attribute>' . "\n";
+$gexf.=' <attribute id="5" title="stand" type="string">   </attribute>' . "\n";
 $gexf.='</attributes>' . "\n";
 $gexf.='<attributes class="edge" type="float">' . "\n";
 $gexf.=' <attribute id="5" title="cooc" type="float"> </attribute>' . "\n";
@@ -52,29 +53,33 @@ $gexf.="<nodes>" . "\n";
 
 // liste des chercheurs
 $sql = "SELECT * FROM $nodes1 ";
-
+pt($sql);
 
 
 $scholars = array();
 foreach ($base->query($sql) as $row) {
+
     $info = array();
     foreach ($row as $key => $value) {
         $info[$key] = $value;
     }
+    //pta($row);
     // on fait la liste des noeud2 liés
     $nodes1_id_list='';
-    $sql2="SELECT * FROM ".$nodes1."2".$nodes2." Where $nodes1=".$row[$nodes1_id]; //'SELECT '.$nodes2.'_id FROM projets2keywords'.$nodes1.'2'.$nodes2;//.' WHERE '.$nodes1.'='.$row[$nodes1_id];
+    $sql2="SELECT * FROM ".$nodes1."2".$nodes2." Where $nodes1=".$info[$nodes1_id]; //'SELECT '.$nodes2.'_id FROM projets2keywords'.$nodes1.'2'.$nodes2;//.' WHERE '.$nodes1.'='.$row[$nodes1_id];
+    pt($sql2);
     foreach ($base->query($sql2) as $line) {
         $nodes1_id_list.=$line[$nodes2.'_id'].', ';        
     }
     $info['keywords_ids']=explode(',',substr(trim($nodes1_id_list), 0, -1)); // liste des indices des noeuds 2 associés
 
-    $scholars[$row[$nodes1_id]] = $info;
-}
+    $scholars[$info[$nodes1_id]] = $info;
 
+}
 foreach ($scholars as $scholar) {
     // on en profite pour charger le profil sémantique du gars
     $scholar_keywords = $scholar['keywords_ids'];        
+    pta($scholar_keywords);
     // on en profite pour construire le réseau des termes par cooccurrence chez les scholars
     for ($k = 0; $k < count($scholar_keywords); $k++) {
         if($scholar_keywords[$k]!=null){
@@ -102,7 +107,7 @@ foreach ($scholars as $scholar) {
             
 }
 pt('terms cooc');
-//pta($termsMatrix);
+pta($termsMatrix);
 // liste des termes
 $sql = "SELECT term,id,occurrences FROM ".$nodes2;
 $term_array = array();
@@ -180,6 +185,8 @@ foreach ($scholars as $scholar) {
         $nodePositionY = rand(0, 100) / 100;
         $content=$scholar[$descriptif];
         
+        
+        
    
         //pt($scholar['last_name'].','.$scholar['css_voter'].','.$scholar['css_member']);
         //pt($color);        
@@ -221,7 +228,7 @@ foreach ($scholars as $scholar){
     $nodeId1=$scholar[$nodes1_id];
     $neighbors=$scholarsMatrix[$nodeId1]['cooc'];   
     foreach ($neighbors as $neigh_id => $cooc) {        
-        if ($neigh_id!=$nodeId1) {
+        if ($neigh_id>$nodeId1) {
             $weight=jaccard($scholarsMatrix[$nodeId1]['occ'],$scholarsMatrix[$neigh_id]['occ'],$cooc);
             $edgeid+=1;
             $gexf.='<edge id="'.$edgeid.'"'.' source="D::'.$nodeId1.'" '.

@@ -5,6 +5,8 @@ list de parametres.
  */
 $fichier = "csv/cnrs/cartographieSalonTerritoires.csv";
 $fichier = "csv/cnrs/test.csv";
+$fichier = "csv/cnrs/cartographieSalonTerritoiresTous.csv";
+
 //$fichier = "cartographieSalonTerritoires.csv";
 
 
@@ -15,7 +17,7 @@ $language='french';
 $nodes1='projets'; // type de noeuds1
 $nodes1_name='Intitulé_du_projet';
 $nodes1_acronym='acronym';
-$nodes1_id='id';
+$nodes1_id='Id';
 $node1_content="Descriptif";
 
 $nodes2='keywords'; // type de noeuds2
