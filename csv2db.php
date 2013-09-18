@@ -6,12 +6,18 @@ echo '<meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>';
  * and open the template in the editor.m
  */
 
+
 $scriptpath = dirname(__FILE__);
 include($scriptpath . "/parametres.php");
 include("$scriptpath.'/../common/library/fonctions_php.php");
+pt('toto');
 
-echo 'tot';
-echo stemword('community', 'english', 'UTF_8');
+
+$elapse=0;
+
+$delta_time=date(s)-$elapse;
+$elapse=date(s);
+pt('debut du script'.date(s).' - durée'.$elapse.'s');
 
 $orga_array = array(); // liste des organizations pour l'auto complete
 $labs_array = array(); // liste des labs pour l'auto complete
@@ -117,8 +123,10 @@ if (true) {
     $ngram_id = array(); // ngram rencontrés tous types de données confondues
     $scholar_count = 0;
 
+    $scholar_processed=array(); // list of scholar processed so far
 
     pt("opening " . $fichier . ' delimiter should be set to ' . $file_sep . ' and " ');
+
     if (($handle = fopen($fichier, "r", "UTF-8")) !== FALSE) {        
 
         /* On crée les entrée de la table avec la première ligne */
@@ -165,12 +173,15 @@ if (true) {
         $white_list = array();
 
 
+$delta_time=date(s)-$elapse;
+$elapse=date(s);
+pt('ouverture du fichier maître'.date(s).' - durée'.$elapse.'s');
 
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
             
             //pt('');
             //pta($data);
-            //pt($data[$la["Last_Name"]]);    
+            pt($data[$la["Last_Name"]]);    
             //pt($data[$la["CSS_Member"]]);    
             //pt($data[$la["CSS_Voters"]]);  
             
@@ -199,10 +210,14 @@ if (true) {
             $scholar_count+=1;
             if ($data[$la['Last_Name']] != NULL) {
                 $scholar = str_replace(' ', '_', trim($data[$la['First_Name']]) . ' ' . trim($data[$la['Second_fist_name_initials']]) . ' ' . trim($data[$la['Last_Name']]));
-            } else {
                 $scholar = str_replace(' ', '_', $data[$la['First_Name']] . ' ' . $data[$la['Second_fist_name_initials']] . ' ' . $data[$la['Last_Name']]);
             }
-            
+            if (!in_array($scholar, $scholar_processed)){
+                $scholar_processed[]=$scholar;
+
+            }
+
+
             $scholar_ngrams = '';
             $scholar_ngrams_ids = '';
             $scholar_ngrams_count = 0;
@@ -268,7 +283,7 @@ if (true) {
                     foreach ($gram_array as $gram) {
                         $ngram_stemmed.=stemword(trim(strtolower($gram)), $language, 'UTF_8') . ' ';
                     }
-                    pt('toto');
+                    
                     $ngram_stemmed = trim($ngram_stemmed);
                     //
                     $gram_array2 = split(' ', $normalized_ngram2);
@@ -321,7 +336,7 @@ if (true) {
                     
                 if ((substr($data[$la["Postal_Code"]],0,1)=='75')||(substr($data[$la["Postal_Code"]],0,1)=='91')||(substr($data[$la["Postal_Code"]],0,1)=='92')||(substr($data[$la["Postal_Code"]],0,1)=='94')||(substr($data[$la["Postal_Code"]],0,1)=='94')){
                     $region='Île-de-France';
-                    pt('Region idF');
+                    //pt('Region idF');
                 }else{
                     $region='';
                 }
@@ -369,9 +384,9 @@ if (true) {
             }else{
                 $poor_scored_scholars.=','. $data[$la["login"]];
             }
-            pt($data[$la["Last_Name"]].'-'.$data[$la["login"]].' scored: '.$score);
-            //
-
+            //pt($data[$la["Last_Name"]].'-'.$data[$la["login"]].' scored: '.$score);
+                //
+        
 
             $num = count($data);
             $row++;
@@ -396,9 +411,13 @@ if (true) {
               VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"; */
             //pt($query);
             //$results = $base->query($query);                       
+              
         }
         }
     }
+    $delta_time=date(s)-$elapse;
+    $elapse=date(s);
+    pt('fin de traitement des scholars'.date(s).' - durée'.$elapse.'s');
 
 
     pt($scholar_count . ' scholars processed');
@@ -410,6 +429,10 @@ if (($handle = fopen($region, "r", "UTF-8")) !== FALSE) {
         $results = $base->query($query);
         }
 }
+
+$delta_time=date(s)-$elapse;
+$elapse=date(s);
+pt('fin traitement régions'.date(s).' - durée'.$elapse.'s');
 
 
 /// on stocke la liste des lab et des organizations pour l'auto complete
@@ -464,7 +487,10 @@ if (($handle = fopen($region, "r", "UTF-8")) !== FALSE) {
             $white_list[$form] = array('stemmed' => $stemmed_ngram, 'main_form' => $most_common_form);
         }
     }
-
+    
+    $delta_time=date(s)-$elapse;
+    $elapse=date(s);
+    pt('fin terms insert'.date(s).' - durée'.$elapse.'s');
 
 
     $query = "INSERT INTO data (name,content) VALUES ('whitelist','" . $white_list_serialized . "')";
@@ -483,17 +509,26 @@ if (($handle = fopen($region, "r", "UTF-8")) !== FALSE) {
 ///////////////////////////////////////////
 
     include('job_process.php');
+    $delta_time=date(s)-$elapse;
+    $elapse=date(s);
+    pt('job process'.date(s).' - durée'.$elapse.'s');
 
 ///////////////////////////////////////////
 /////////// Analyse des laboratoires //////
 ///////////////////////////////////////////
     include('labs_process.php');
+    $delta_time=date(s)-$elapse;
+    $elapse=date(s);
+    pt('lab process'.date(s).' - durée'.$elapse.'s');
 
 ///////////////////////////////////////////
 /////////// Analyse des organisations //////
 ///////////////////////////////////////////
 
     include('orga_process.php');
+    $delta_time=date(s)-$elapse;
+    $elapse=date(s);
+    pt('orga process'.date(s).' - durée'.$elapse.'s');
 
 
 

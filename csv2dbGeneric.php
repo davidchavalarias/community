@@ -78,7 +78,7 @@ END;
         if (($handle = fopen($fichier, "r", "UTF-8")) !== FALSE) {        
 
 
-            /* On crée les entrée de la table avec la première ligne */
+            /* On crée les entrées de la table avec la première ligne */
             $query = "CREATE TABLE " . $nodes1 . " (";
             $subquery = ""; /* partie de la requete pour alimenter la base plus bas */
             $la = array(); // liste des noms de colonne du csv

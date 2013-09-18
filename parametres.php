@@ -4,7 +4,9 @@
 list de parametres.
  */
 
+//$dbname='community_all.sqlite';// nom de la base sqlite utilisée par les scripts
 $dbname='community.db';// nom de la base sqlite utilisée par les scripts
+
 $dbelections='new_councilorsECCS12.sqlite';
 //$dbname='scholar_test_data.db';
 $scholars_db ="raw_scholars";
@@ -22,12 +24,20 @@ $fichier = "csv/CSSscholars30Nov2011.csv";
 $fichier = "csv/CSSScholars5janvier2012.csv";
 $fichier = "csv/ScholarsFrench19fev_2012.csv";
 $fichier="/var/log/tiki/tracker_19.csv";
+$fichier = "csv/idfOnlyJune2013.csv";
+$fichier = "csv/uniques_chercheurs_idfJune2013_merged.csv";
+$fichier="/var/log/tiki/tracker_19.csv";
+//$fichier = "csv/test.csv";
+
+//$fichier = "csv/test.csv";
+
+
 $lab_csv="/var/log/tiki/tracker_45.csv";
 $orga_csv="/var/log/tiki/tracker_7.csv";
 $jobs_csv="/var/log/tiki/tracker_20.csv";
 $elections_csv="csv/elections/ResultsCSSCouncil_ECCS12.csv";
 
-$all=true;// dit s'il faut tenir compte du who's who approval
+$all=false;// dit s'il faut tenir compte du who's who approval
 if ($all){
     echo 'WARNING ALL IS ON';
 }
@@ -53,7 +63,7 @@ $file_sep=',';
 $scholar_filter="where want_whoswho='Yes'";
 //$scholar_filter="where css_member='Yes'";
 //$scholar_filter="";
-$scholar_filter=" where country='France' AND want_whoswho='Yes'";
+//$scholar_filter=" where country='France' AND want_whoswho='Yes'";
 //$scholar_filter=" where country='France'";
 
 //$compress='No';

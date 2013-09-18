@@ -5,7 +5,7 @@
 
     
     pt("opening " . $jobs_csv . ' delimiter should be set to ; and " ');
-    pt('second ngram');
+    
     if (($handle = fopen($jobs_csv, "r", "UTF-8")) !== FALSE) {
 
         $la = array(); // liste des noms de colonne du csv
@@ -35,13 +35,13 @@
             }
             $label_list[$label] = 1;
             $query = $query . $label . ' text,';
-            pt($label);
+            //pt($label);
         }
 
         // on analyse le csv
         while (($data = fgetcsv($handle, 1000, $file_sep)) !== FALSE) {
 
-            pt($data[$la['Title']]);
+            //pt($data[$la['Title']]);
             if ($data[$la['Title']] != NULL) {
                 // analyse des mots clefs
                 $count+=1;
@@ -50,7 +50,7 @@
                 $job_ngrams_ids = '';
                 $job_ngrams_count = 0;
                 $keywords = $data[$la['Keywords']];
-                pt($keywords );
+                //pt($keywords );
                 $keywords = str_replace(".", ', ', $keywords);
                 $keywords = str_replace("-", ' ', $keywords);
                 $ngrams = split('(,|;)', $keywords);
@@ -68,12 +68,12 @@
                     }
                     $ngram_stemmed = trim($ngram_stemmed);                  
                     if (array_key_exists($ngram_stemmed, $ngram_id)) {// si la forme stemmed du ngram a déjà été rencontrée
-                        pt($ngram_stemmed);
+                        //pt($ngram_stemmed);
                         $job_ngrams.=$ngram . ',';
                         $job_ngrams_ids.=$ngram_id[$ngram_stemmed] . ',';
                         $job_ngrams_count+=1;
                         $query = "INSERT INTO jobs2terms (job_id,term_id)  VALUES ('" . $data[$la['itemId']] . "'," . $ngram_id[$ngram_stemmed] . ")";                        
-                        pt($query);
+                        //pt($query);
                         $results = $base->query($query);
                     }
                 }
@@ -103,7 +103,7 @@
                         . '")';
 
                  $job_array[]=$job;                 
-                pt($query);
+                //pt($query);
                 $results = $base->query($query);
             }
         }

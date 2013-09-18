@@ -11,12 +11,14 @@ include("../common/library/fonctions_php.php");
 
 
 
-$output= fopen('chercheurs_idf_merged.csv', "w","UTF-8");
+$output= fopen('csv/chercheurs_idfJune2013_merged.csv', "w","UTF-8");
 
 // var :
-$fichier='csv/iscpifJune2013.csv';
-$whitelisst_file='ChercheursContactJanv2013IdF.csv';
-$white_words=array();
+$fichier='csv/idfOnlyJune2013.csv';
+$whitelist_file='csv/ChercheursContactJanv2013IdF.csv';
+$white_first_name=array();
+$white_last_name=array();
+$white_csv=array(  );
 pt("opening ".$fichier);
 $data=array();
 $emails=array();
@@ -26,17 +28,34 @@ $names=array(); // liste des noms de famille pour compater
 $second_line=array(); // pour repérer le champ contenant les mails
 $stopped='';
 $ok='';
+$last_name_fields='Last Name -- 166';///
+$first_name_fields='First Name -- 165';
 
-$last_name_fields_contact='Nom -- 389';///
-$last_mail_fields_scholars='Last Name -- 166';
-
-echo 'toto';
-
-if (($handleStop = fopen($whitelisst_file, "r","UTF-8")) !== FALSE) {    
-    while (($data= fgets($handleStop, 4096)) !== false) {
-        $white_words[]=trim($data);
+// on detecte les colonnes cibles dans le csv whitelist, celles les noms et prénoms
+$count=0;
+if (($handle = fopen($whitelist_file, "r","UTF-8")) !== FALSE) {    
+    while ((($line= fgetcsv($handle, 4096)) !== false)&($count<1)) {
+        if ($count<1){
+            $white_first_line=$line;
+        } 
+        $count+=1;
     }        
 }
+
+$last_white_name_column=array_search($last_name_fields,$white_first_line);
+$first_white_name_column=array_search($first_name_fields,$white_first_line);
+$white_email=array_search('Adresse électronique -- 391',$white_first_line);
+
+
+
+if (($handleStop = fopen($whitelist_file, "r","UTF-8")) !== FALSE) {    
+    while (($data= fgetcsv($handleStop, 4096)) !== false) {
+        $white_first_name[]=trim($data[$first_white_name_column]);
+        $white_last_name[]=trim($data[$last_white_name_column]);  
+        $white_csv[]=$data;
+    }        
+}
+
 //pta($white_words);
 pt('');
 
@@ -50,8 +69,9 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
         $second_line=$line;    
     }        
 }
-pta($first_line);
-$last_name_column=array_search($last_mail_fields_scholars,$first_line);
+//pta($first_line);
+$last_name_column=array_search($last_name_fields,$first_line);
+$first_name_column=array_search($first_name_fields,$first_line);
 $check_column=array_search('itemId',$first_line);
 
 pt('last name in col:'.$last_name_column);// colonne servant à détecter les pre-taggés
@@ -75,64 +95,57 @@ if (($handle = fopen($fichier, "r","UTF-8")) !== FALSE) {
     while (($line= fgetcsv($handle, 4096)) !== false) {
         $data[]=$line;        
         $emails[]=trim($line[$email_field]);
-        $names[]=trim($line[$last_name_column]);
+        $first_names[]=trim($line[$first_name_column]);
+        $last_names[]=trim($line[$last_name_column]);        
     }        
 }
 
-
-
 $emails=array_unique($emails);
-
 pt(count($emails)." unique mails");
 $count=0;
-foreach ($names as $key => $value) { 
-    if (in_array($value,$white_words)){
+foreach ($last_names as $key => $value) { 
+    if (in_array($value,$white_last_name)){
 //        pt($data[$key]);
+        $rank_in_white_csv=array_search($value,$white_last_name);
+        if(strcmp(trim($first_names[$key]),trim($white_first_name[$rank_in_white_csv]))==0){
+        $white_csv[$rank_in_white_csv][0]='x';
+
         $data[$key][$check_column]='idf';        
         fputcsv($output, $data[$key]);
-        $count+=1;
+        $count+=1;    
+        }else{
+        fputcsv($output, $data[$key]);
+    }
+        
     }else{
         fputcsv($output, $data[$key]);
     }    
     
 }
 
+// on ajoute ceux de la white liste qui ne sont pas dans la liste initiale
+$template=$data[$key];
+foreach ($template as $key => $value) {
+    $template[$key]='';
+}
+pt($count.' terms in OK LIST');
 
-
+$count=0;
+foreach ($white_csv as $key => $value) {     
+    if (strcmp($value[0],'x')!=0){
+        $line=$template;
+        $line[array_search($last_name_fields,$first_line)]= $value[2];
+        $line[array_search($first_name_fields,$first_line)]= $value[3];
+        $line[array_search('Institutional affiliation: -- 667',$first_line)]= $value[5];
+        $line[array_search('Lab: -- 880',$first_line)]= $value[6];        
+        $line[$check_column]='idf'; 
+        fputcsv($output,$line);
+        $count+=1;
+    }
+}
+pt($count.' new scholars added');
 fclose($handle);
 fclose($output);
-pt($count.' terms in OK LIST');
 pt($ok);
 
-function merge($fieldlist, $sep=', ') {
-    global $data,$la;
-    /* merge les champs dans $fieldlist séparés par des virgules en vérifiant qu'ils sont non vides */
-    $string = '';
-    $fields = split(',', $fieldlist);
-    $data[$la[trim($fields[0])]];
-    for ($i = 0; $i < count($fields); $i++) {
-        if ($data[$la[trim($fields[$i])]] != null) {
-            $string = $string . $data[$la[trim($fields[$i])]] . $sep;
-        }
-    }
 
-    if (count($string) > count($sep)) {
-        if (strcmp($sep, substr($string(-count($sep), -1))) == 0) {
-            $string = substr($string, 0, -count($sep) - 1);
-        }
-    }
-    return $string;
-}
-
-function section($name,$content,$sep=', '){
-    /* merge les champs dans $fieldlist séparés par des virgules en vérifiant qu'ils sont non vides*/
-    global $data,$la;
-    
-    $string='';        
-    $temp=merge($content,$sep);
-    if ($temp!=null){
-            $string=''.$name.': '.$temp.'';
-        }    
-    return $string;   
-}
-        
